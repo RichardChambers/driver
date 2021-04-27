@@ -61,17 +61,6 @@ welcome use KeDeiTFT
 #define _cmd(x)		cmd(~x)
 #define ww_data(x)	w_data(~x)
 
-#ifdef ROTATE_0||ROTATE_180
-	#define		XXX	240
-	#define		YYY	320
-#endif
-
-#ifdef ROTATE_90||ROTATE_270
-	#define		XXX	320
-	#define		YYY	240
-#endif
-
-
 extern unsigned char   MODULE;
 
 #endif

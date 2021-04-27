@@ -4,7 +4,6 @@ welcome use KeDeiTFT
 #include	"KeDei_TFT.h"
 #include	"KeDei_config.h"
 
-unsigned short x_all,y_all;
 unsigned char   MODULE=_MODULE_1_;
 
 void TFTLCD::begin(void)
@@ -152,10 +151,8 @@ int TFTLCD::r_data(void)
  *Author   ： KeDei
  *Time   ： 2015/4/21
  ****************************************/
-void TFTLCD::clear(unsigned short color)
+void TFTLCD::clear(TftColor color)
 {
-	int i=320,j=240;
-	
 	cmd(0x2a);    
 
   if(MODULE == _MODULE_1_)
@@ -227,8 +224,8 @@ else
 
 	cmd(0x2c); 
 
-	for(i = y_all;i > 0;i--)
-		for(j = x_all;j > 0;j--)
+	for(unsigned short i = y_all; i > 0; i--)
+		for(unsigned short j = x_all; j > 0; j--)
 	{
 			w_data(color>>8);
 			w_data(color);
@@ -597,20 +594,25 @@ cmd(0x29);
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::set_area(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1)
+void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
 {
-	cmd(0x2a);    //Set Gamma 
-	w_data(x0>>8); 
-	w_data(x0); 
-	w_data(x1>>8); 
-	w_data(x1); 
+	//  define rectangular area of frame memory where MCU can access
+	//  specify the range of columns and the range of rows for the area
+	//  that we are going to place data into.
 
-	cmd(0x2b);    //Set Gamma 
-	w_data(y0>>8); 
-	w_data(y0); 
-	w_data(y1>>8); 
-	w_data(y1); 
-	cmd(0x2c);  
+	cmd(0x2a);    //Set Column Address 
+	w_data(x0>>8);    // 1st parameter, most significant bits of starting column
+	w_data(x0);       // 2nd parameter, least significant bits of starting column
+	w_data(x1>>8);    // 3rd parameter, most significant bits of ending column
+	w_data(x1);       // 4th parameter, least significant bits of ending column
+
+	cmd(0x2b);    //Set Page Address  
+	w_data(y0>>8);   // 1st parameter, most significant bits of starting page line
+	w_data(y0);      // 2nd parameter, least significant bits of starting page line
+	w_data(y1>>8);   // 3rd parameter, most significant bits of ending page line
+	w_data(y1);      // 4th parameter, least significant bits of ending page line
+
+	cmd(0x2c);   // Write memory, image data will follow
 }
 
 /*****************************************
@@ -622,16 +624,15 @@ void TFTLCD::set_area(unsigned short x0,unsigned short y0,unsigned short x1,unsi
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::v_line(unsigned short x,unsigned short y,unsigned short len,unsigned short color)
+void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
+	if((y + len) > y_all) len = y_all - y - 1;
+	set_area(x, y, x, y + len);
 
-	if((y+len)>YYY) len=YYY-y;
-	set_area(x,y,x,y+len);
-
-	for(len;len > 0;len--)
+	for( ; len > 0; len--)
 	{
-			w_data(color>>8);
-			w_data(color);
+		w_data(color >> 8);
+		w_data(color);
 	}
 }
 
@@ -644,16 +645,15 @@ void TFTLCD::v_line(unsigned short x,unsigned short y,unsigned short len,unsigne
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::h_line(unsigned short x,unsigned short y,unsigned short len,unsigned short color)
+void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
+	if((x+len) > x_all) len = x_all - x - 1;
+	set_area(x, y, x + len, y);
 
-	if((x+len)>XXX) len=XXX-y;
-	set_area(x,y,x+len,y);
-
-	for(len;len > 0;len--)
+	for(len; len > 0; len--)
 	{
-			w_data(color>>8);
-			w_data(color);
+		w_data(color>>8);
+		w_data(color);
 	}
 }
 
@@ -666,19 +666,36 @@ void TFTLCD::h_line(unsigned short x,unsigned short y,unsigned short len,unsigne
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_area(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short color)
+void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
 {
-		unsigned short i,j;
-		if(x0 > x1)	return;
-		if(y0 > y1) return;
-		set_area(x0,y0,x1,y1);
+	if(x0 > x1)	return;
+	if(y0 > y1) return;
+	set_area(x0, y0, x1, y1);
 	
-		for(i=x1-x0+1;i > 0;i--)
-			for(j=y1-y0+1;j > 0;j--)
-			{
-				w_data(color>>8);
-				w_data(color);
-			}
+	for(unsigned short i = x1 - x0 + 1; i > 0; i--)
+		for(unsigned short j = y1 - y0 + 1; j > 0; j--)
+		{
+			w_data(color>>8);
+			w_data(color);
+		}
+}
+
+void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap)
+{
+	for (unsigned char char_n = 1; char_n; char_n <<= 1)
+	{
+		set_area(x0, y0, x0, y0);
+		if (bitMap & char_n)
+		{
+			w_data(fg_color >> 8);
+			w_data(fg_color);
+		}
+		else {
+			w_data(bg_color >> 8);
+			w_data(bg_color);
+		}
+		x0++;    // next pixel in this row.
+	}
 }
 
 /*****************************************
@@ -690,12 +707,12 @@ void TFTLCD::draw_area(unsigned short x0,unsigned short y0,unsigned short x1,uns
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_edge(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short size,unsigned short color)
+void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color)
 {
-	draw_area(x0,y0,x1,y0+size,color);
-	draw_area(x0,y1-size,x1,y1,color);
-	draw_area(x0,y0,x0+size,y1,color);
-	draw_area(x1-size,y0,x1,y1,color);
+	draw_area(x0, y0, x1, y0 + size, color);
+	draw_area(x0, y1 - size, x1, y1, color);
+	draw_area(x0, y0, x0 + size, y1, color);
+	draw_area(x1 - size, y0, x1, y1, color);
 }
 
 /*****************************************
@@ -706,7 +723,7 @@ void TFTLCD::draw_edge(unsigned short x0,unsigned short y0,unsigned short x1,uns
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void   TFTLCD::set_pixl(unsigned short x,unsigned short y,unsigned short color)
+void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
 {
 	set_area(x,y,x,y);
 	w_data(color>>8);
@@ -722,29 +739,28 @@ void   TFTLCD::set_pixl(unsigned short x,unsigned short y,unsigned short color)
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_buttom(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short circular_size,unsigned short color)
+void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
-		int dx = 0,dy = circular_size;
+		int dx = 0;
 		int d = 1 - circular_size;                  
-		for(;dy >= dx;)                    
+		for(int dy = circular_size; dy >= dx; )
 		{
-			 draw_area(-dy+x0+circular_size,-dx+y0+circular_size,dy+x1-circular_size,-dx+y0+circular_size,color);
-			 draw_area(-dy+x0+circular_size,dx+y1-circular_size,dy+x1-circular_size,dx+y1-circular_size,color);
+			 draw_area(-dy + x0 + circular_size, -dx + y0 + circular_size, dy + x1 - circular_size, -dx + y0 + circular_size, color);
+			 draw_area(-dy + x0 + circular_size, dx + y1 - circular_size, dy + x1 - circular_size, dx + y1 - circular_size, color);
 		
-			 
-		if(d < 0)
-			d = d + 2 * dx + 3;                       
-		else
-		{
-			d = d + 2 * (dx - dy) + 5;                  
-			dy--;
-			draw_area(-dx+x0+circular_size,-dy+y0+circular_size,dx+x1-circular_size,-dy+y0+circular_size,color);
-			draw_area(-dx+x0+circular_size,dy+y1-circular_size,dx+x1-circular_size,dy+y1-circular_size,color);
+			if(d < 0)
+				d = d + 2 * dx + 3;                       
+			else
+			{
+				d = d + 2 * (dx - dy) + 5;                  
+				dy--;
+				draw_area(-dx + x0 + circular_size, -dy + y0 + circular_size, dx + x1 - circular_size, -dy + y0 + circular_size, color);
+				draw_area(-dx + x0 + circular_size, dy + y1 - circular_size, dx + x1 - circular_size, dy + y1 - circular_size, color);
 
-		}
-		dx++;                                         
+			}
+			dx++;                                         
 		}
 		draw_area(x0,y0+circular_size,x1,y1-circular_size,color);
 	}
@@ -760,13 +776,13 @@ void TFTLCD::draw_buttom(unsigned short x0,unsigned short y0,unsigned short x1,u
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_buttom_edge(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short circular_size,unsigned short color)
+void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
-		int dx = 0,dy = circular_size;
+		int dx = 0;
 		int d = 1 - circular_size;                  
-		for(;dy >= dx;)                    
+		for(int dy = circular_size; dy >= dx; )
 		{
 			set_pixl(-dy+x0+circular_size,-dx+y0+circular_size,color);
 			set_pixl(dy+x1-circular_size,-dx+y0+circular_size,color);
@@ -777,23 +793,20 @@ void TFTLCD::draw_buttom_edge(unsigned short x0,unsigned short y0,unsigned short
 			set_pixl(-dx+x0+circular_size,dy+y1-circular_size,color);
 			set_pixl(dx+x1-circular_size,dy+y1-circular_size,color);
 			 
-		if(d < 0)
-			d = d + 2 * dx + 3;                       
-		else
-		{
-			d = d + 2 * (dx - dy) + 5;                  
-			dy--;
-		
-
-		}
-		dx++;                                         
+			if(d < 0)
+				d = d + 2 * dx + 3;                       
+			else
+			{
+				d = d + 2 * (dx - dy) + 5;                  
+				dy--;
+			}
+			dx++;                                         
 		}
 		draw_area(x0+circular_size,y0,x1-circular_size,y0,color);
 		draw_area(x0+circular_size,y1,x1-circular_size,y1,color);
 		draw_area(x0,y0+circular_size,x0,y1-circular_size,color);
 		draw_area(x1,y0+circular_size,x1,y1-circular_size,color);
 	}
-
 }
 
 /*****************************************
@@ -804,7 +817,7 @@ void TFTLCD::draw_buttom_edge(unsigned short x0,unsigned short y0,unsigned short
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-unsigned short   TFTLCD::RGB_TO_565(unsigned char r,unsigned char g,unsigned char b)
+unsigned short   TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned char b)
 {
  unsigned short _RGB = ((unsigned short)r>>3)<<11;
  
@@ -812,7 +825,6 @@ unsigned short   TFTLCD::RGB_TO_565(unsigned char r,unsigned char g,unsigned cha
  
  _RGB |= ((unsigned short)b>>3);
  return _RGB;
-
 }
 
 /*****************************************
@@ -823,29 +835,29 @@ unsigned short   TFTLCD::RGB_TO_565(unsigned char r,unsigned char g,unsigned cha
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R,unsigned short color)
+void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R, TftColor color)
 {
-	int x0 = 0,y0 = R;
+	int x0 = 0;
 	int d = 1 - R;                  
-	for(;y0 >= x0;)                    
+	for(int y0 = R; y0 >= x0; )
 	{
-	set_pixl(x0+x,y0+y,color);        
-	set_pixl(y0+x,x0+y,color);        
-	set_pixl(-x0+x,y0+y,color);      
-	set_pixl(-y0+x,x0+y,color);       
-	set_pixl(-x0+x,-y0+y,color);      
-	set_pixl(-y0+x,-x0+y,color);       
-	set_pixl(x0+x,-y0+y,color); 
-	set_pixl(y0+x,-x0+y,color);  
-	if(d < 0)
-		d = d + 2 * x0 + 3;                       
-	else
-	{
-		d = d + 2 * (x0 - y0) + 5;                  
-		y0--;
+		set_pixl(x0+x, y0+y, color);        
+		set_pixl(y0+x, x0+y, color);        
+		set_pixl(-x0+x, y0+y, color);      
+		set_pixl(-y0+x, x0+y, color);       
+		set_pixl(-x0+x, -y0+y, color);      
+		set_pixl(-y0+x, -x0+y, color);       
+		set_pixl(x0+x, -y0+y, color); 
+		set_pixl(y0+x, -x0+y, color);  
+		if(d < 0)
+			d = d + 2 * x0 + 3;                       
+		else
+		{
+			d = d + 2 * (x0 - y0) + 5;                  
+			y0--;
 		
-	}
-	x0++;                                         
+		}
+		x0++;                                         
 	}
 }
 
@@ -858,7 +870,7 @@ void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R,unsi
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsigned short IR,unsigned short color)
+void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsigned short IR, TftColor color)
 {
 
 	/*int i;
@@ -866,21 +878,19 @@ void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsig
 		draw_circle(x,y,i,color);
 
 */
-	int x0,y0,x1,y1,value;
-	//x0=OR;
-	//y0=OR;
-	for(y0=0;y0<OR;y0++)
+
+	for(int y0 = 0; y0 < OR; y0++)
 	{
-		for(x0=0;x0<OR;x0++)
+		for(int x0 = 0; x0 < OR; x0++)
 		{
-			value=x0*x0+y0*y0;
-			if((value<=(OR*OR))&&(value>=(IR*IR)))
-				{
-					set_pixl(x-x0,y-y0,color);   
-					set_pixl(x-x0,y+y0,color);  
-					set_pixl(x+x0,y+y0,color);  
-					set_pixl(x+x0,y-y0,color);      
-				}	
+			int value = x0 * x0 + y0 * y0;
+			if((value <= (OR * OR)) && (value >= (IR * IR)))
+			{
+				set_pixl(x-x0,y-y0,color);   
+				set_pixl(x-x0,y+y0,color);  
+				set_pixl(x+x0,y+y0,color);  
+				set_pixl(x+x0,y-y0,color);      
+			}	
 		}
 	}
 }
@@ -893,53 +903,49 @@ void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsig
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::FillCircle(unsigned short x,unsigned short y,unsigned short R,unsigned short color)
-{	int x0 = 0,y0 = R;
+void TFTLCD::FillCircle(unsigned short x,unsigned short y,unsigned short R, TftColor color)
+{	int x0 = 0;
 	int d = 1 - R;                  
-	for(;y0 >= x0;)                    
+	for(int y0 = R; y0 >= x0; )
 	{
 		 draw_area(-y0+x,x0+y,y0+x,x0+y,color);
 		 draw_area(-y0+x,-x0+y,y0+x,-x0+y,color);
 		 
-	if(d < 0)
-		d = d + 2 * x0 + 3;                       
-	else
-	{
-		d = d + 2 * (x0 - y0) + 5;                  
-		y0--;
-		draw_area(-x0+x,-y0+y,x0+x,-y0+y,color);
-		draw_area(-x0+x,y0+y,x0+x,y0+y,color);
-
+		if(d < 0)
+			d = d + 2 * x0 + 3;                       
+		else
+		{
+			d = d + 2 * (x0 - y0) + 5;                  
+			y0--;
+			draw_area(-x0+x,-y0+y,x0+x,-y0+y,color);
+			draw_area(-x0+x,y0+y,x0+x,y0+y,color);
+		}
+		x0++;                                         
 	}
-	x0++;                                         
-	}
-
 }
 
 
-void TFTLCD::draw_pixl(unsigned short x,unsigned short y,unsigned short size,unsigned short color)
+void TFTLCD::draw_pixl(unsigned short x,unsigned short y,unsigned short size, TftColor color)
 {
-	unsigned short i,j;
-	set_area(x,y,x+size,y+size);
-	for(i = size+1;i > 0;i--)
-		for(j = size+1;j > 0;j--)
+	set_area(x, y, x + size, y + size);
+	for(unsigned short i = size + 1; i > 0; i--)
+		for(unsigned short j = size + 1; j > 0; j--)
 		{
 			w_data(color>>8);
 			w_data(color);
 		}
 }
 
-void   TFTLCD::draw_sin(int x,int y,float A,float w,float r,unsigned short color)
+void   TFTLCD::draw_sin(int x,int y,float A,float w,float r, TftColor color)
 {
-	float i;
-	for(i = x;i < 315;i++)
+	for(float i = x; i < 315; i++)
 	{
 		 draw_pixl(i,A*sin(i/w+r)+y,0,color);
 	}
 }
 
 
-void TFTLCD::Bresenhamline(int x0,int y0,int x1, int y1,int color) 
+void TFTLCD::Bresenhamline(int x0,int y0,int x1, int y1, TftColor color)
 {
 
 	if (y0==y1)
@@ -993,8 +999,4 @@ void TFTLCD::Bresenhamline(int x0,int y0,int x1, int y1,int color)
 	}
 
      // draw_pixl (x, int(y),1, color); 
-
-
-
-
 }

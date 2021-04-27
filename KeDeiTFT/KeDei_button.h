@@ -5,10 +5,9 @@ welcome use KeDeiTFT
 #ifndef         _KeDei_button_H_
 #define         _KeDei_button_H_
 
-#include 	"KeDei_config.h"
 #include	"KeDei_TFT.h"
-#include	"Arduino.h"
 #include	"KeDei_font.h"
+#include	"Arduino.h"
 
 
 class  Button 
@@ -16,8 +15,6 @@ class  Button
 public:
 	Button()
 	{
-	//	x				= 0;
-	//	y				= 0;
 		//the  button size
 		x_size			= 64;
 		y_size			= 40;
@@ -30,14 +27,14 @@ public:
 	//	botton_moder	= 1;
 	};
 
-	void drawButton(unsigned short _x,unsigned short _y,bool _botton_moder, char *str);
-	bool istouch(unsigned short _x,unsigned short _y);
+	void drawButton(unsigned short _x, unsigned short _y, bool _botton_moder, const char *str, Font & myFont);
+	bool istouch(unsigned short _x, unsigned short _y);
 	void pendown(void);
 	void penup(void);
 	/*if you want  to change the butom size or the color,you can use  the  follow function to achieve your purpose,
 	but you  must do it before use the drawbutton() function;also  if you  always change the auto value ,you can change the button() function*/
-	void resetsize(unsigned char _x_size,unsigned char _y_size);
-	void resetcolor(unsigned short _edge_up_color,unsigned short _edge_down_color,unsigned short _button_color,unsigned short _font_color);
+	void resetsize(unsigned char _x_size, unsigned char _y_size);
+	void resetcolor(unsigned short _edge_up_color, unsigned short _edge_down_color, unsigned short _button_color, unsigned short _font_color);
 	
 private:
 	//the  poisition(x,y);
@@ -53,7 +50,6 @@ private:
 	unsigned short	font_color;
 	//the  botton moder 0--cube_button , 1--circle_button
 	bool			botton_moder;
-	unsigned short	len;
 };
 
 

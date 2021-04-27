@@ -17,7 +17,8 @@ welcome use KeDeiTFT
  ****************************************/
 void Font::begin(void)
 {
-		font_color		= 0xf800;
+		font_color	  = 0xf800;    // RGB565 value for red
+		txt_backcolor = 0xffff;    // RGB565 value for white
 		font_interval = 2;
 		font_leading = 6;
 #if defined(USE_FONT_8_B)
@@ -25,10 +26,13 @@ void Font::begin(void)
 #else
 		font_size = 16;
 #endif
+		// Set the default screen region for the text area.
+		// The default is the entire screen however this can
+		// be modified with the set_txt() method.
 		txt_x0			= 0;
 		txt_y0			= 0;
-		txt_x1			= 240;
-		txt_y1			= 320;
+		txt_x1			= TFT.x_all;
+		txt_y1			= TFT.y_all;
 
 		now_x			= txt_x0;
 		now_y			= txt_y0;
@@ -53,24 +57,8 @@ void Font::set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigne
 	now_x			= x0;
 	now_y			= y0;
 	txt_backcolor	= txt_b_color;
-	//if(txt_b_color != NULL)
-		TFT.draw_area(x0, y0, x1, y1, txt_b_color);
-	
+	TFT.draw_area(x0, y0, x1, y1, txt_b_color);
 }
-
-/*****************************************
- *The function name ： set_fontcolor
- *Function  ： 设置字体的颜色为f_color
- *Input  ： f_color
- *Output   ： none
- *Author   ：KeDei
- *Time   ：2015/4/21
- ****************************************/
-void Font::set_fontcolor(unsigned short f_color)
-{
-	font_color	= f_color;
-}
-
 
 /*****************************************
  *The function name ： clear_txt
@@ -322,16 +310,42 @@ void Font::lcd_char(char _data)
 		};
 #endif
 
+	// handle special characters such as new line.
+	// if this character is a control character and it is
+	// not one of the control characters we are processing
+	// then ignore it.
+	switch (_data) {
+	case '\n':
+		// new line means go to beginning of next line.
+		now_y += font_size + font_leading;
+		now_x = txt_x0;
+		return;
+	case '\r':
+		// carriage return means go to beginning of current line.
+		now_x = txt_x0;
+		return;
+	}
+	if (_data < ' ') return;
+
+
+	// Check the current write position (now_x, now_y) to ensure
+	// that we position the cursor at a position where there
+	// is room to write at least one character within our text region.
 	if(now_x > txt_x1 - (font_size / 2)) 
 	{
+		// move the write position cursor to the beginning of the
+		// next line.
 		now_x =  txt_x0;
-		now_y += font_size;
+		now_y += font_size + font_leading;
 	}
 	if(now_y > txt_y1 - font_size)
 	{
+		// if we are at the below the text region then reset our position
+		// back to the top of the region. Wrap around to top in other words.
 		now_y = txt_y0;
 		clear_txt(txt_backcolor);
 	}
+
 
 #if defined(SMALLER_FONT_TABLE)
 	// Lets translate the character to one of the printable
@@ -340,32 +354,19 @@ void Font::lcd_char(char _data)
 	// since in order to have a smaller font table taking up
 	// less memory we remove the lower case letters.
 	//    Richard Chambers, 04-25-2021
-	if (_data < ' ' || _data > 'z') return;
+	if (_data > 'z') return;
 	if (_data >= 'a') _data = _data - 'a' + 'A';
 #endif
-	unsigned char char_i = _data - ' ';
+	unsigned char char_i = _data - ' ';  // font table starts with space, 0x20, not control character 0x00.
 
-//Serial.println(char_i);
 	for(unsigned char char_m = 0; char_m < font_size; char_m++)
 	{
-		for(unsigned char char_n = 0; char_n < 8; char_n++)
-		{
-
-			if (font_table[char_i][char_m] & 1 << char_n)
-			{
-			   TFT.set_area(now_x, now_y, ++now_x, now_y);
-			   TFT.w_data(font_color >> 8);
-			   TFT.w_data(font_color);
-			}
-			else
-			{
-			  now_x++;
-  
-			}
-		 }
+		TFT.draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table[char_i][char_m]);
+		// shift down to the next row of pixels for the character
 		 now_y++;
-		 now_x -= 8;
 	}
+	// reposition the cursor to the pixel position for the top left
+	// of this character we've just displayed.
 	now_y -= font_size;
 	now_x += 8 + font_interval;
 }
@@ -378,37 +379,13 @@ void Font::lcd_char(char _data)
  *Author   ： KeDei
  *Time   ： 2015/4/21
  ****************************************/
-void Font::lcd_string(char str[])
+void Font::lcd_string(const char str[])
 {
-  char *str_char=str;
-  for(;;)
-  {
-      if(*str_char == '\0')
-      {
-          now_y += font_size + font_leading;
-          now_x = txt_x0;
-          return;
-      }
-      if(*str_char == '\n')
-      {
-          now_y += font_size + font_leading;
-          now_x = txt_x0;
-          str_char++ ;
-      }
-      lcd_char(*str_char++);
+  for (const char *str_char = str; *str_char; str_char++) {
+		// function lcd_char() will move the cursor.
+		lcd_char(*str_char);
   }
-}
-
-/*****************************************
- *The function name ： lcd_int
- *Function  ： 显示整型变量值
- *Input  ： *int value
- *Output   ： none
- *Author   ： KeDei
- *Time   ： 2015/4/21
- ****************************************/
-void	Font::lcd_int(int value)
-{
-	itoa(value,buff,10); 
-	lcd_string(buff);
+  // default action for writing a string is to position
+  // the cursor at the beginning of the next line of text.
+  lcd_char('\n');
 }

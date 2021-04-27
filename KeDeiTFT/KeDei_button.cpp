@@ -18,7 +18,7 @@ The text content of the button is * str;
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::drawButton(unsigned short _x,unsigned short _y,bool _botton_moder, char *str)
+void Button::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder, const char *str, Font & myFont)
 {
 //	the  botton moder 0--cube_button  1--circle_button
 	x				= _x;
@@ -26,25 +26,20 @@ void Button::drawButton(unsigned short _x,unsigned short _y,bool _botton_moder, 
 	botton_moder	= _botton_moder;
 	if(_botton_moder)
 	{
-		TFT.draw_buttom(x,y,x+x_size,y+y_size,10,button_color);
-		TFT.draw_buttom_edge(x,y,x+x_size,y+y_size,10,edge_up_color);
-		
-
+		TFT.draw_buttom(x, y, x + x_size, y + y_size, 10, button_color);
+		TFT.draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_up_color);
 	}
 	else
 	{
-		TFT.draw_area(x,y,x+x_size,y+y_size,button_color);
-		TFT.draw_edge(x,y,x+x_size,y+y_size,2,edge_up_color);
+		TFT.draw_area(x, y, x + x_size, y + y_size, button_color);
+		TFT.draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
 	}
-	len = strlen(str);
-	font.set_txt(x+x_size/2-9*len/2,y+y_size/2-8,x+x_size-2,y+y_size-2,button_color);
 
-    font.set_fontcolor(font_color);
-    font.lcd_string(str);
-	
-   //set_txt(112,117,170,140,0x00f0);
-  // set_fontcolor(0xffff);
-   //lcd_string("Button");*/
+	unsigned short len = strlen(str);
+	myFont.set_txt(x + x_size / 2 - 9 * len / 2, y + y_size / 2 - 8, x + x_size - 2, y + y_size - 2, button_color);
+
+	myFont.set_fontcolor(font_color);
+	myFont.lcd_string(str);
 }
 
 /*****************************************
@@ -55,10 +50,10 @@ void Button::drawButton(unsigned short _x,unsigned short _y,bool _botton_moder, 
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-bool Button::istouch(unsigned short _x,unsigned short _y)
+bool Button::istouch(unsigned short _x, unsigned short _y)
 {
-	if(x<_x&&_x<x+x_size)
-		if(y<_y&&_y<y+y_size)
+	if(x <_x && _x < x + x_size)
+		if(y <_y && _y < y + y_size)
 		{
 			pendown();
 			return true;
@@ -78,12 +73,11 @@ void Button::pendown(void)
 {
 	if(botton_moder)
 	{
-		TFT.draw_buttom_edge(x,y,x+x_size,y+y_size,10,edge_down_color);
+		TFT.draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_down_color);
 	}
 	else
 	{
-		
-		TFT.draw_edge(x,y,x+x_size,y+y_size,2,edge_down_color);
+		TFT.draw_edge(x, y, x + x_size, y + y_size, 2, edge_down_color);
 	}
 }
 
@@ -99,12 +93,11 @@ void Button::penup(void)
 {
 	if(botton_moder)
 	{
-		TFT.draw_buttom_edge(x,y,x+x_size,y+y_size,10,edge_up_color);
+		TFT.draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_up_color);
 	}
 	else
 	{
-		
-		TFT.draw_edge(x,y,x+x_size,y+y_size,2,edge_up_color);
+		TFT.draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
 	}
 }
 
@@ -118,7 +111,7 @@ but you  must do it before use the Button() function*/
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::resetsize(unsigned char _x_size,unsigned char _y_size)
+void Button::resetsize(unsigned char _x_size, unsigned char _y_size)
 {
 	x_size = _x_size;
 	y_size = _y_size;
@@ -132,7 +125,7 @@ void Button::resetsize(unsigned char _x_size,unsigned char _y_size)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::resetcolor(unsigned short _edge_up_color,unsigned short _edge_down_color,unsigned short _button_color,unsigned short _font_color)
+void Button::resetcolor(unsigned short _edge_up_color, unsigned short _edge_down_color, unsigned short _button_color, unsigned short _font_color)
 {
 	edge_up_color		= _edge_up_color;
 	edge_down_color		= _edge_down_color;
