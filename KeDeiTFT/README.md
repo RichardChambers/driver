@@ -49,6 +49,14 @@ An additional Preprocessor directive is used to all for a further reduction in t
 eliminating lower case letters. A change in the function `lcd_char()` performs a lower case to upper case
 conversion should the character being displayed be a lower case letter.
 
+See the defined constants in the header file KeDei_font.h:
+ - `SMALLER_FONT_TABLE` removes the lower case letters and translates lower case to upper case
+ - `USE_FONT_8_B` changes from the 16x16 font to an 8x8 font
+
+The 8x8 bitmap font displays text that is smaller than the 16x16 font however it is readable. Using the
+smaller font reduces the memory required for the bitmap font table and also allows for more text to be
+displayed.
+
 ### Reformated source code and added comments
 
 The first large change has been to reformat the source code in places to make it more readable and to
