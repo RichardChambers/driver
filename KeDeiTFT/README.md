@@ -35,7 +35,23 @@ The TFTLCD class in the files KeDei_TFT.cpp and KeDei_TFT.h contain the hardware
 of drawing primitives that use the basic hardware layer to draw various kinds of geometrical graphics
 such as lines, circles, rectangles, and curves both filled and unfilled.
 
-All of these graphics functions create their images by paining individual pixels with various colors.
+All of these graphics functions create their images by painting individual pixels with various colors. The
+available primitives, excluding a couple of utility functions for drawing buttons, are:
+ - TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+ - TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+ - TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
+ - TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
+ - TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short OR, unsigned short IR, TftColor color)
+ - TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
+ - TFTLCD::draw_sin(int x, int y, float A, float w, float r, TftColor color)
+ - TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color)
+
+In addition there are two functions for converting between RGB color values and RGB565 color values. Converting
+an RGB color value to an RGB565 value does result in the loss of a couple of the least significant bits of each of
+the RGB color values. This means that a particular color value expressed in RGB may not be the same color value if
+it is converted to RGB565 and then converted back. The conversion functions are:
+ - unsigned short TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned char b)
+ - void TFTLCD::R565_TO_RGB(TftColor color, unsigned char rgb[3])
 
 ## Changes made to this fork
 
