@@ -31,8 +31,8 @@ void Font::begin(void)
 		// be modified with the set_txt() method.
 		txt_x0			= 0;
 		txt_y0			= 0;
-		txt_x1			= TFT.x_all;
-		txt_y1			= TFT.y_all;
+		txt_x1			= TFTLCD::x_all;
+		txt_y1			= TFTLCD::y_all;
 
 		now_x			= txt_x0;
 		now_y			= txt_y0;
@@ -57,7 +57,7 @@ void Font::set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigne
 	now_x			= x0;
 	now_y			= y0;
 	txt_backcolor	= txt_b_color;
-	TFT.draw_area(x0, y0, x1, y1, txt_b_color);
+	TFTLCD::draw_area(x0, y0, x1, y1, txt_b_color);
 }
 
 /*****************************************
@@ -74,7 +74,7 @@ void Font::clear_txt(void)
 }
 void Font::clear_txt(unsigned short backColor)
 {
-	TFT.draw_area(txt_x0, txt_y0, txt_x1, txt_y1, backColor);
+	TFTLCD::draw_area(txt_x0, txt_y0, txt_x1, txt_y1, backColor);
 }
 
 
@@ -361,7 +361,7 @@ void Font::lcd_char(char _data)
 
 	for(unsigned char char_m = 0; char_m < font_size; char_m++)
 	{
-		TFT.draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table[char_i][char_m]);
+		TFTLCD::draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table[char_i][char_m]);
 		// shift down to the next row of pixels for the character
 		 now_y++;
 	}

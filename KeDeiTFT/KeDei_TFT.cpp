@@ -2,9 +2,11 @@
 welcome use KeDeiTFT
 */
 #include	"KeDei_TFT.h"
-#include	"KeDei_config.h"
 
-unsigned char   MODULE=_MODULE_1_;
+static unsigned short TFTLCD::x_all = 0;
+static unsigned short TFTLCD::y_all = 0;
+
+static unsigned char  TFTLCD::MODULE = _MODULE_1_;
 
 void TFTLCD::begin(void)
 {
@@ -19,7 +21,7 @@ void TFTLCD::begin(void)
  *Author   ：KeDei
  *Time   ：2015/4/21
  ****************************************/
-void  TFTLCD::cmd(unsigned char cmd)
+static void  TFTLCD::cmd(unsigned char cmd)
 {
 
 #ifdef   __AVR_ATmega328P__
@@ -61,7 +63,7 @@ void  TFTLCD::cmd(unsigned char cmd)
  *Author   ： KeDei
  *Time   ： 2015/4/21
  ****************************************/
-void  TFTLCD::w_data(unsigned char data)
+static void  TFTLCD::w_data(unsigned char data)
 {
 #ifdef  __AVR_ATmega328P__
 	
@@ -93,10 +95,8 @@ void  TFTLCD::w_data(unsigned char data)
 }
 
 
-int TFTLCD::r_data(void)
+static int TFTLCD::r_data(void)
 {
-
-
 #ifdef  __AVR_ATmega328P__22
 	
 	PORTC=(PORTC&0Xfa)|0x0a;
@@ -118,15 +118,15 @@ int TFTLCD::r_data(void)
 	pinMode(D7, INPUT);
 	
 	
-	digitalWrite(CS,LOW);
-	digitalWrite(RS,HIGH);
-	digitalWrite(WR,HIGH);
-	digitalWrite(RD,LOW);
+	digitalWrite(CS, LOW);
+	digitalWrite(RS, HIGH);
+	digitalWrite(WR, HIGH);
+	digitalWrite(RD, LOW);
 	delay(5);
-	data=(PINB&0X03)|(PIND&0XFC);
+	data=(PINB & 0X03)|(PIND & 0XFC);
 	delay(5);
-	digitalWrite(RD,HIGH);
-	digitalWrite(CS,HIGH);
+	digitalWrite(RD, HIGH);
+	digitalWrite(CS, HIGH);
 
 
 	pinMode(D0, OUTPUT);
@@ -153,74 +153,91 @@ int TFTLCD::r_data(void)
  ****************************************/
 void TFTLCD::clear(TftColor color)
 {
+	// This command is used to define area of frame memory where MCU can access.
+	// This command makes no change on the other driver status. The values of SC[15:0],
+	// the 16 bit starting column, and EC[15:0], the 16 bit ending column, are referred
+	// when RAMWR command comes. Each value represents one column line in the Frame Memory.
+	//
+	// NOTE: The starting and ending column are zero based values and numbering starts
+	//       with 0 and ends with n - 1.
+
 	cmd(0x2a);    
 
-  if(MODULE == _MODULE_1_)
-{
+    if(MODULE == _MODULE_1_)
+    {
 #ifdef  ROTATE_0||ROTATE_180
-	x_all=240;
-	y_all=320;
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0xef);
+		x_all=240;
+		y_all=320;
+		w_data(0x00);     // first parameter SC[15:8]
+		w_data(0x00);     // second parameter SC[7:0]
+		w_data(0x00);     // third parameter EC[15:8], 0x00ef = 239
+		w_data(0xef);     // fourth parameter EC[7:0]
 
-	cmd(0x2b);    
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x01); 
-	w_data(0x3f);
+		// This command is used to define area of frame memory where MCU can access.
+		// This command makes no change on the other driver status.The values of SP[15:0],
+		// the 16 bit starting page line, and EP[15:0], the 16 bit ending page line, are
+		// referred when RAMWR command comes.Each value represents one Page line in
+		// the Frame Memory.
+		cmd(0x2b);
+		w_data(0x00);     // first parameter SP[15:8]
+		w_data(0x00);     // second parameter SP[7:0]
+		w_data(0x01);     // third parameter EP[15:8], 0x013f = 319
+		w_data(0x3f);     // fourth parameter EP[7:0]
 #endif
 
 #ifdef  ROTATE_90||ROTATE_270
-	x_all=320;
-	y_all=240;
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x01); 
-	w_data(0x3f);
+		x_all=320;
+		y_all=240;
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x01);
+		w_data(0x3f);
 
-	cmd(0x2b);   
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0xef);
+		cmd(0x2b);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0xef);
 #endif
 
-}
-else
-{
+    }
+    else
+    {
 #ifdef  ROTATE_0||ROTATE_180
-	x_all=320;
-	y_all=480;
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x01); 
-	w_data(0x3f);
+		x_all=320;
+		y_all=480;
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x01);
+		w_data(0x3f);
 
-	cmd(0x2b);    
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x01); 
-	w_data(0xdf);
+		cmd(0x2b);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x01);
+		w_data(0xdf);
 #endif
 
 #ifdef  ROTATE_90||ROTATE_270
-	x_all=480;
-	y_all=320;
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x01); 
-	w_data(0xdf);
+		x_all=480;
+		y_all=320;
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x01);
+		w_data(0xdf);
 
-	cmd(0x2b);   
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x00); 
-	w_data(0x3f);
+		cmd(0x2b);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x3f);
 #endif
 
-}
+    }
+
+    // This command transfers image data from the host processor to
+    // ILI9486抯 frame memory starting at the pixel location specified by
+    // preceding Column Address Set(2Ah) and Page Address Set(2Bh) commands.
 
 	cmd(0x2c); 
 
@@ -232,7 +249,7 @@ else
 	}
 }
 
-void TFTLCD::gpio_init()
+static void TFTLCD::gpio_init()
 {
 	pinMode(RST, OUTPUT);
 	pinMode(CS, OUTPUT);
@@ -277,311 +294,315 @@ void TFTLCD::tft_init()
 
 
 #ifdef  _ALL_MODULE_
-cmd(0x04);
-r_data();
-if(r_data() ==133)
-{
+// This read byte returns 24 bits display identification information.
+//   The 1st parameter is dummy data.
+//   The 2nd parameter (ID1 [7:0]): LCD module抯 manufacturer ID.
+//   The 3rd parameter (ID2 [7:0]): LCD module/driver version ID.
+//   The 4th parameter (ID3 [7:0]): LCD module/driver ID.
+
+	cmd(0x04);
+	r_data();
 	if(r_data() ==133)
-{
-	 MODULE=_MODULE_1_ ;
-}
-	
-}
-else
-{
+	{
+		if(r_data() ==133)
+		{
+			MODULE=_MODULE_1_ ;
+		}
+	}
+	else
+	{
 #endif
 
 #ifdef  _35INCH_MODULE_
-cmd(0xD3);
-r_data();
-r_data();
-if(r_data() ==148)
-{
-	if(r_data() ==134)
-{
-	 MODULE=_MODULE_2_ ;
-}
-	
-}
-else
-{
+		// Read IC device code.
+		//    The 1st parameter is dummy read period.
+		//    The 2nd parameter means the IC version.
+		//    The 3rd and 4th parameter mean the IC model name.
+		//
+		cmd(0xD3);
+		r_data();
+		r_data();
+		if(r_data() ==148)
+		{
+			if(r_data() ==134)
+			{
+				MODULE=_MODULE_2_ ;
+			}
+		}
+		else
+		{
 /*
-cmd(0xD0);
-r_data();
-if(r_data() ==153)
-{
-	 MODULE=_MODULE_3_ ;
-	
-}
+    cmd(0xD0);
+    r_data();
+    if(r_data() ==153)
+    {
+	    MODULE=_MODULE_3_ ;
+    }
 */
 
- MODULE=_MODULE_3_ ;
-}
+			MODULE=_MODULE_3_ ;
+		}
 #ifdef  _ALL_MODULE_
-}
+    }
 #endif
 
-//Serial.print(MODULE);
-//Serial.print(MODULE);
+	if(MODULE == _MODULE_3_)
+	{
+		cmd(0x11); //Sleep Out
+		delay(12);
+		cmd(0xB9); //SET password
+		w_data(0xFF);
+		w_data(0x83);
+		w_data(0x57);
+		cmd(0xB1); //SETPower
+		w_data(0x00); //STB
+		w_data(0x11); //VGH = 15V, VGL = -10V
+		w_data(0x1E); //VSPR = 4.5V
+		w_data(0x1E); //VSNR = -4.5V
+		w_data(0xC3);  //AP
+		w_data(0x77); //FS
+		cmd(0xB4); //SETCYC
+		w_data(0x11); //1-dot
+		w_data(0x40); //RTN
+		w_data(0x00); //DIV
+		w_data(0x2A); //N_DUM
+		w_data(0x2A); //I_DUM
+		w_data(0x20); //GDON
+		w_data(0x78); //GDOFF
+		cmd(0xB6); //VCOMDC
+		w_data(0x33);
+		cmd(0xC0); //SETSTBA
+		w_data(0x70); //N_OPON
+		w_data(0x70); //I_OPON
+		w_data(0x00); //STBA
+		w_data(0x3C);  //STBA
+		w_data(0xC4);  //STBA
+		w_data(0x08); //GENON
+		cmd(0xC2); // Set Gate EQ
+		w_data(0x00);
+		w_data(0x08);
+		w_data(0x04);
+		cmd(0xCC); //Set Panel
+		w_data(0x09); //SS_Panel = 1, BGR_Panel = 1
+		cmd(0xE0); //Set Gamma
+		w_data(0x00); //VRP0
+		w_data(0x05); //VRP1
+		w_data(0x12); //VRP2
+		w_data(0x21); //VRP3
+		w_data(0x2C); //VRP4
+		w_data(0x40); //VRP5
+		w_data(0x4B); //VRP6
+		w_data(0x52); //VRP7
+		w_data(0x47); //VRP8
+		w_data(0x41); //VRP9
+		w_data(0x3A); //VRP10
+		w_data(0x31); //VRP11
+		w_data(0x2E); //VRP12
+		w_data(0x29); //VRP13
+		w_data(0x24); //VRP14
+		w_data(0x00); //VRP15
+		w_data(0x00); //VRN0
+		w_data(0x05); //VRN1
+		w_data(0x12); //VRN2
+		w_data(0x21); //VRN3
+		w_data(0x2C); //VRN4
+		w_data(0x40); //VRN5
+		w_data(0x4B); //VRN6
+		w_data(0x52); //VRN7
+		w_data(0x47); //VRN8
+		w_data(0x41); //VRN9
+		w_data(0x3A); //VRN10
+		w_data(0x31); //VRN11
+		w_data(0x2E); //VRN12
+		w_data(0x29); //VRN13
+		w_data(0x24); //VRN14
+		w_data(0x00); //VRN15
+		w_data(0x00);
+		w_data(0x01); //GMA_Reload
+		cmd(0x36); //COLMOD
+		w_data(0x48); //RGB666
+		cmd(0x3A); //COLMOD
+		w_data(0x55); //RGB666
+		cmd(0x29); //Display On
+		delay(10);
+		cmd(0x2C); //Write SRAM Data
+	}
+	else
+	if(MODULE==_MODULE_2_)
+	{
 
- 
-if(MODULE == _MODULE_3_)
-{
-cmd(0x11); //Sleep Out
-delay(12);
-cmd(0xB9); //SET password
-w_data(0xFF);
-w_data(0x83);
-w_data(0x57);
-cmd(0xB1); //SETPower
-w_data(0x00); //STB
-w_data(0x11); //VGH = 15V, VGL = -10V
-w_data(0x1E); //VSPR = 4.5V
-w_data(0x1E); //VSNR = -4.5V
-w_data(0xC3);  //AP
-w_data(0x77); //FS
-cmd(0xB4); //SETCYC
-w_data(0x11); //1-dot
-w_data(0x40); //RTN
-w_data(0x00); //DIV
-w_data(0x2A); //N_DUM
-w_data(0x2A); //I_DUM
-w_data(0x20); //GDON
-w_data(0x78); //GDOFF
-cmd(0xB6); //VCOMDC
-w_data(0x33);
-cmd(0xC0); //SETSTBA
-w_data(0x70); //N_OPON
-w_data(0x70); //I_OPON
-w_data(0x00); //STBA
-w_data(0x3C);  //STBA
-w_data(0xC4);  //STBA
-w_data(0x08); //GENON
-cmd(0xC2); // Set Gate EQ
-w_data(0x00);
-w_data(0x08);
-w_data(0x04);
-cmd(0xCC); //Set Panel
-w_data(0x09); //SS_Panel = 1, BGR_Panel = 1
-cmd(0xE0); //Set Gamma
-w_data(0x00); //VRP0
-w_data(0x05); //VRP1
-w_data(0x12); //VRP2
-w_data(0x21); //VRP3
-w_data(0x2C); //VRP4
-w_data(0x40); //VRP5
-w_data(0x4B); //VRP6
-w_data(0x52); //VRP7
-w_data(0x47); //VRP8
-w_data(0x41); //VRP9
-w_data(0x3A); //VRP10
-w_data(0x31); //VRP11
-w_data(0x2E); //VRP12
-w_data(0x29); //VRP13
-w_data(0x24); //VRP14
-w_data(0x00); //VRP15
-w_data(0x00); //VRN0
-w_data(0x05); //VRN1
-w_data(0x12); //VRN2
-w_data(0x21); //VRN3
-w_data(0x2C); //VRN4
-w_data(0x40); //VRN5
-w_data(0x4B); //VRN6
-w_data(0x52); //VRN7
-w_data(0x47); //VRN8
-w_data(0x41); //VRN9
-w_data(0x3A); //VRN10
-w_data(0x31); //VRN11
-w_data(0x2E); //VRN12
-w_data(0x29); //VRN13
-w_data(0x24); //VRN14
-w_data(0x00); //VRN15
-w_data(0x00);
-w_data(0x01); //GMA_Reload
-cmd(0x36); //COLMOD
-w_data(0x48); //RGB666
-cmd(0x3A); //COLMOD
-w_data(0x55); //RGB666
-cmd(0x29); //Display On
-delay(10);
-cmd(0x2C); //Write SRAM Data
-}
-else
-if(MODULE==_MODULE_2_)
-{
+		cmd(0xF1);
+		w_data(0x36);
+		w_data(0x04);
+		w_data(0x00);
+		w_data(0x3C);
+		w_data(0x0F);
+		w_data(0x8F);
 
-cmd(0xF1);
-w_data(0x36);
-w_data(0x04);
-w_data(0x00);
-w_data(0x3C);
-w_data(0x0F);
-w_data(0x8F);
+		cmd(0xF2);
+		w_data(0x18);
+		w_data(0xA3);
+		w_data(0x12);
+		w_data(0x02);
+		w_data(0xB2);//32
+		w_data(0x12);
+		w_data(0xFF);
+		w_data(0x10);
+		w_data(0x00);
 
-cmd(0xF2);
-w_data(0x18);
-w_data(0xA3);
-w_data(0x12);
-w_data(0x02);
-w_data(0xB2);//32
-w_data(0x12);
-w_data(0xFF);
-w_data(0x10);
-w_data(0x00);
-
-cmd(0xF8);
-w_data(0x21);
-w_data(0x04);
+		cmd(0xF8);
+		w_data(0x21);
+		w_data(0x04);
 
 
-cmd(0xF9);
-w_data(0x00);
-w_data(0x08);
+		cmd(0xF9);
+		w_data(0x00);
+		w_data(0x08);
 
 
-cmd(0xC0);
-w_data(0x13);
-w_data(0x10);
+		cmd(0xC0);
+		w_data(0x13);
+		w_data(0x10);
 
-cmd(0xC1);
-w_data(0x43);
-w_data(0x00);
+		cmd(0xC1);
+		w_data(0x43);
+		w_data(0x00);
 
-cmd(0xC2);
-w_data(0x22);
+		cmd(0xC2);
+		w_data(0x22);
 
-cmd(0xC5);
-w_data(0x00);
-w_data(0x4D);
-w_data(0x80);
+		cmd(0xC5);
+		w_data(0x00);
+		w_data(0x4D);
+		w_data(0x80);
 
-cmd(0xB1);
-w_data(0xC0);
-w_data(0x11);
+		cmd(0xB1);
+		w_data(0xC0);
+		w_data(0x11);
 
-cmd(0xB4);
-w_data(0x01);//02,03
+		cmd(0xB4);
+		w_data(0x01);//02,03
 
-cmd(0xB6);
-w_data(0x00);
-w_data(0x42);
-w_data(0x3B);
+		cmd(0xB6);
+		w_data(0x00);
+		w_data(0x42);
+		w_data(0x3B);
 
-//cmd(0xB7);
-//w_data(0x07);
+		//cmd(0xB7);
+		//w_data(0x07);
 
-cmd(0xE0);
-w_data(0x0F);
-w_data(0x1B);
-w_data(0x19);
-w_data(0x0B);
-w_data(0x0F);
-w_data(0x08);
-w_data(0x46);
-w_data(0xB9);
-w_data(0x33);
-w_data(0x08);
-w_data(0x03);
-w_data(0x00);
-w_data(0x00);
-w_data(0x00);
-w_data(0x00);
+		cmd(0xE0);
+		w_data(0x0F);
+		w_data(0x1B);
+		w_data(0x19);
+		w_data(0x0B);
+		w_data(0x0F);
+		w_data(0x08);
+		w_data(0x46);
+		w_data(0xB9);
+		w_data(0x33);
+		w_data(0x08);
+		w_data(0x03);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x00);
+		w_data(0x00);
 
-cmd(0xE1);
-w_data(0x0F);
-w_data(0x3F);
-w_data(0x3F);
-w_data(0x0F);
-w_data(0x1C);
-w_data(0x07);
-w_data(0x4C);
-w_data(0x74);
-w_data(0x38);
-w_data(0x07);
-w_data(0x10);
-w_data(0x04);
-w_data(0x26);
-w_data(0x24);
-w_data(0x00);
+		cmd(0xE1);
+		w_data(0x0F);
+		w_data(0x3F);
+		w_data(0x3F);
+		w_data(0x0F);
+		w_data(0x1C);
+		w_data(0x07);
+		w_data(0x4C);
+		w_data(0x74);
+		w_data(0x38);
+		w_data(0x07);
+		w_data(0x10);
+		w_data(0x04);
+		w_data(0x26);
+		w_data(0x24);
+		w_data(0x00);
 
-cmd(0x36);
-w_data(0xc8);//08
+		cmd(0x36);
+		w_data(0xc8);//08
 
-cmd(0x3A);
-w_data(0x55);//66
+		cmd(0x3A);
+		w_data(0x55);//66
 
-cmd(0x20);
-cmd(0x11);
-delay(120);
-cmd(0x29);
-}
-else
+		cmd(0x20);
+		cmd(0x11);
+		delay(120);
+		cmd(0x29);
+	}
+	else
 #endif
-{
+	{
 #ifdef _24INCH_MODULE_
 
-cmd(0x11);
-delay(120); 
-cmd(0x36);
-w_data(0x00);
-cmd(0x3a);
-w_data(0x55);
-cmd(0xb2);
-w_data(0x0c);
-w_data(0x0c);
-w_data(0x00);
-w_data(0x33);
-w_data(0x33);
-cmd(0xb7);
-w_data(0x35);
-cmd(0xbb);
-w_data(0x2b);
-cmd(0xc0);
-w_data(0x2c);
-cmd(0xc2);
-w_data(0x01);
-cmd(0xc3);
-w_data(0x11);
-cmd(0xc4);
-w_data(0x20);
-cmd(0xc6);
-w_data(0x0f);
-cmd(0xd0);
-w_data(0xa4);
-w_data(0xa1);
-cmd(0xe0);
-w_data(0xd0);
-w_data(0x00);
-w_data(0x05);
-w_data(0x0e);
-w_data(0x15);
-w_data(0x0d);
-w_data(0x37);
-w_data(0x43);
-w_data(0x47);
-w_data(0x09);
-w_data(0x15);
-w_data(0x12);
-w_data(0x16);
-w_data(0x19);
-cmd(0xe1);
-w_data(0xd0);
-w_data(0x00);
-w_data(0x05);
-w_data(0x0d);
-w_data(0x0c);
-w_data(0x06);
-w_data(0x2d);
-w_data(0x44);
-w_data(0x40);
-w_data(0x0e);
-w_data(0x1c);
-w_data(0x18);
-w_data(0x16);
-w_data(0x19);
-cmd(0x29);
+		cmd(0x11);
+		delay(120); 
+		cmd(0x36);
+		w_data(0x00);
+		cmd(0x3a);
+		w_data(0x55);
+		cmd(0xb2);
+		w_data(0x0c);
+		w_data(0x0c);
+		w_data(0x00);
+		w_data(0x33);
+		w_data(0x33);
+		cmd(0xb7);
+		w_data(0x35);
+		cmd(0xbb);
+		w_data(0x2b);
+		cmd(0xc0);
+		w_data(0x2c);
+		cmd(0xc2);
+		w_data(0x01);
+		cmd(0xc3);
+		w_data(0x11);
+		cmd(0xc4);
+		w_data(0x20);
+		cmd(0xc6);
+		w_data(0x0f);
+		cmd(0xd0);
+		w_data(0xa4);
+		w_data(0xa1);
+		cmd(0xe0);
+		w_data(0xd0);
+		w_data(0x00);
+		w_data(0x05);
+		w_data(0x0e);
+		w_data(0x15);
+		w_data(0x0d);
+		w_data(0x37);
+		w_data(0x43);
+		w_data(0x47);
+		w_data(0x09);
+		w_data(0x15);
+		w_data(0x12);
+		w_data(0x16);
+		w_data(0x19);
+		cmd(0xe1);
+		w_data(0xd0);
+		w_data(0x00);
+		w_data(0x05);
+		w_data(0x0d);
+		w_data(0x0c);
+		w_data(0x06);
+		w_data(0x2d);
+		w_data(0x44);
+		w_data(0x40);
+		w_data(0x0e);
+		w_data(0x1c);
+		w_data(0x18);
+		w_data(0x16);
+		w_data(0x19);
+		cmd(0x29);
 #endif
-}
+	}
 
 }
 
@@ -594,25 +615,37 @@ cmd(0x29);
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
+static void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
 {
 	//  define rectangular area of frame memory where MCU can access
 	//  specify the range of columns and the range of rows for the area
 	//  that we are going to place data into.
+	//
+	// NOTE: The starting and ending column are zero based values and numbering starts
+	//       with 0 and ends with n - 1. So a single pixel at the very top left corner
+	//       is specified as 0, 0. The x-axis is numbered 0 to x_all - 1 and the
+	//       y-axis is numbered 0 to y_all - 1.
 
 	cmd(0x2a);    //Set Column Address 
-	w_data(x0>>8);    // 1st parameter, most significant bits of starting column
-	w_data(x0);       // 2nd parameter, least significant bits of starting column
-	w_data(x1>>8);    // 3rd parameter, most significant bits of ending column
-	w_data(x1);       // 4th parameter, least significant bits of ending column
+	w_data(x0>>8);    // 1st parameter, most significant 8 bits of starting column
+	w_data(x0);       // 2nd parameter, least significant 8 bits of starting column
+	w_data(x1>>8);    // 3rd parameter, most significant 8 bits of ending column
+	w_data(x1);       // 4th parameter, least significant 8 bits of ending column
 
 	cmd(0x2b);    //Set Page Address  
-	w_data(y0>>8);   // 1st parameter, most significant bits of starting page line
-	w_data(y0);      // 2nd parameter, least significant bits of starting page line
-	w_data(y1>>8);   // 3rd parameter, most significant bits of ending page line
-	w_data(y1);      // 4th parameter, least significant bits of ending page line
+	w_data(y0>>8);   // 1st parameter, most significant 8 bits of starting page line
+	w_data(y0);      // 2nd parameter, least significant 8 bits of starting page line
+	w_data(y1>>8);   // 3rd parameter, most significant 8 bits of ending page line
+	w_data(y1);      // 4th parameter, least significant 8 bits of ending page line
 
 	cmd(0x2c);   // Write memory, image data will follow
+
+	// Image data will normally be some form of w_data() calls to set the color of the pixels
+	// in the region specified.
+	// For example:
+	//    	w_data(color >> 8);   // write most significant 8 bits of RGB565 color value
+	//    	w_data(color);        // write least significant 8 bits of RGB565 color value
+
 }
 
 /*****************************************
@@ -624,7 +657,7 @@ void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, u
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
 	if((y + len) > y_all) len = y_all - y - 1;
 	set_area(x, y, x, y + len);
@@ -645,7 +678,7 @@ void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftC
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
 	if((x+len) > x_all) len = x_all - x - 1;
 	set_area(x, y, x + len, y);
@@ -666,25 +699,28 @@ void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftC
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
+static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
 {
+	if (x1 >= x_all) x1 = x_all - 1;
+	if (y1 >= y_all) y1 = y_all - 1;
 	if(x0 > x1)	return;
 	if(y0 > y1) return;
+
 	set_area(x0, y0, x1, y1);
 	
-	for(unsigned short i = x1 - x0 + 1; i > 0; i--)
-		for(unsigned short j = y1 - y0 + 1; j > 0; j--)
+	for(unsigned short i = x0; i <= x1; i++)
+		for(unsigned short j = y0; j <= y1; j++)
 		{
 			w_data(color>>8);
 			w_data(color);
 		}
 }
 
-void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap)
+static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap)
 {
+	set_area(x0, y0, x0 + 7, y0);
 	for (unsigned char char_n = 1; char_n; char_n <<= 1)
 	{
-		set_area(x0, y0, x0, y0);
 		if (bitMap & char_n)
 		{
 			w_data(fg_color >> 8);
@@ -694,7 +730,6 @@ void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color,
 			w_data(bg_color >> 8);
 			w_data(bg_color);
 		}
-		x0++;    // next pixel in this row.
 	}
 }
 
@@ -707,7 +742,7 @@ void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color,
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color)
+static void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color)
 {
 	draw_area(x0, y0, x1, y0 + size, color);
 	draw_area(x0, y1 - size, x1, y1, color);
@@ -723,7 +758,7 @@ void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, 
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
+static void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
 {
 	set_area(x,y,x,y);
 	w_data(color>>8);
@@ -739,7 +774,7 @@ void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
+static void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
@@ -758,7 +793,6 @@ void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1
 				dy--;
 				draw_area(-dx + x0 + circular_size, -dy + y0 + circular_size, dx + x1 - circular_size, -dy + y0 + circular_size, color);
 				draw_area(-dx + x0 + circular_size, dy + y1 - circular_size, dx + x1 - circular_size, dy + y1 - circular_size, color);
-
 			}
 			dx++;                                         
 		}
@@ -776,7 +810,7 @@ void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
+static void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
@@ -817,14 +851,21 @@ void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned sho
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-unsigned short   TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned char b)
+static unsigned short   TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned char b)
 {
- unsigned short _RGB = ((unsigned short)r>>3)<<11;
+ unsigned short _RGB = ((unsigned short)r >> 3) << 11;
  
- _RGB |= ((unsigned short)g>>2)<<5;
+ _RGB |= ((unsigned short)g >> 2 ) << 5;
  
- _RGB |= ((unsigned short)b>>3);
+ _RGB |= ((unsigned short)b >> 3);
  return _RGB;
+}
+
+static void   TFTLCD::R565_TO_RGB(TftColor color, unsigned char rgb[3])
+{
+	rgb[0] = ((color >> 11) & 0x1f) << 3;
+	rgb[1] = ((color >> 5) & 0x3f) << 2;
+	rgb[2] = (color & 0x1f) << 3;
 }
 
 /*****************************************
@@ -835,7 +876,7 @@ unsigned short   TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned c
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R, TftColor color)
+static void TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
 {
 	int x0 = 0;
 	int d = 1 - R;                  
@@ -855,7 +896,6 @@ void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R, Tft
 		{
 			d = d + 2 * (x0 - y0) + 5;                  
 			y0--;
-		
 		}
 		x0++;                                         
 	}
@@ -870,7 +910,7 @@ void TFTLCD::draw_circle(unsigned short x,unsigned short y,unsigned short R, Tft
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsigned short IR, TftColor color)
+static void TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short OR, unsigned short IR, TftColor color)
 {
 
 	/*int i;
@@ -886,10 +926,10 @@ void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsig
 			int value = x0 * x0 + y0 * y0;
 			if((value <= (OR * OR)) && (value >= (IR * IR)))
 			{
-				set_pixl(x-x0,y-y0,color);   
-				set_pixl(x-x0,y+y0,color);  
-				set_pixl(x+x0,y+y0,color);  
-				set_pixl(x+x0,y-y0,color);      
+				set_pixl(x - x0, y - y0, color);   
+				set_pixl(x - x0, y + y0, color);  
+				set_pixl(x + x0, y + y0, color);  
+				set_pixl(x + x0, y - y0, color);      
 			}	
 		}
 	}
@@ -903,7 +943,7 @@ void TFTLCD::draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsig
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-void TFTLCD::FillCircle(unsigned short x,unsigned short y,unsigned short R, TftColor color)
+static void TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
 {	int x0 = 0;
 	int d = 1 - R;                  
 	for(int y0 = R; y0 >= x0; )
@@ -925,7 +965,7 @@ void TFTLCD::FillCircle(unsigned short x,unsigned short y,unsigned short R, TftC
 }
 
 
-void TFTLCD::draw_pixl(unsigned short x,unsigned short y,unsigned short size, TftColor color)
+static void TFTLCD::draw_pixl(unsigned short x, unsigned short y, unsigned short size, TftColor color)
 {
 	set_area(x, y, x + size, y + size);
 	for(unsigned short i = size + 1; i > 0; i--)
@@ -936,7 +976,7 @@ void TFTLCD::draw_pixl(unsigned short x,unsigned short y,unsigned short size, Tf
 		}
 }
 
-void   TFTLCD::draw_sin(int x,int y,float A,float w,float r, TftColor color)
+static void   TFTLCD::draw_sin(int x, int y, float A, float w, float r, TftColor color)
 {
 	for(float i = x; i < 315; i++)
 	{
@@ -945,9 +985,8 @@ void   TFTLCD::draw_sin(int x,int y,float A,float w,float r, TftColor color)
 }
 
 
-void TFTLCD::Bresenhamline(int x0,int y0,int x1, int y1, TftColor color)
+static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color)
 {
-
 	if (y0==y1)
 		h_line(x0, y0, x1-x0,color);
 	else if (x0==x1)

@@ -26,7 +26,7 @@ public:
 
 	Font() { begin(); }
 	void	begin(void);
-	void	set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short txt_b_color);
+	void	set_txt(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short txt_b_color);
 	void    clear_txt(void);
 	void 	clear_txt(unsigned short color);
 	void	lcd_char(char _data);
@@ -53,5 +53,4 @@ private:
 	unsigned short	now_y;            // top left column coordinate for next character
 };
 
-extern  Font  font;
 #endif

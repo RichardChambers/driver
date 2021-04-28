@@ -61,6 +61,4 @@ welcome use KeDeiTFT
 #define _cmd(x)		cmd(~x)
 #define ww_data(x)	w_data(~x)
 
-extern unsigned char   MODULE;
-
 #endif
