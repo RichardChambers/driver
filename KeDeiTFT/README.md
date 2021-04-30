@@ -102,3 +102,18 @@ This new function also handles overwriting of an area on the screen properly
 by using the font color of the character to place a pixel of the displayed character or the text back ground
 color to place a pixel that is not part of the character glyph. The result is that when text is overwritten
 the new text completely replaces the old rather than the pixels from the older text showing through.
+
+### Allow user of library to provide their own bitmap font table easily
+
+The `Font` class now has a new function, `set_fonttable()` which allows the user of the library to specify
+their own bitmap font table easily.
+
+Another useful addition are the text drawing flags which allow the user of the library to specify special
+treatment to the text as it is drawn. These flags are bit constants which can be combined with the bitwise
+logic operators. The flags are:
+ -	Flags_UpperOnly - the bitmap font table has upper case letters only
+	-	Flags_DoubleHigh - display the text as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+	-	Flags_DoubleWide - display the text as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+
+The user of the library can use these flags to vary the look of the text displayed allowing a greater variety in the
+user interface.
