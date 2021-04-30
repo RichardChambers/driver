@@ -14,14 +14,27 @@
 // is about half the size of the original bitmap font table.
 // See https://github.com/dhepper/font8x8
 
-#define SMALLER_FONT_TABLE
-#define USE_FONT_8_B
+#define USE_FONT_NONE
+//#define SMALLER_FONT_TABLE
+//#define USE_FONT_8_B
 
 class Font {
 public:
 	struct FontPos {
 		unsigned short x;
 		unsigned short y;
+	};
+
+	struct FontTable {
+		static const unsigned char  Flags_UpperOnly = 0x01;    // bitmap font table has upper case letters only
+		static const unsigned char  Flags_DoubleHigh = 0x02;   // display the character as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+		static const unsigned char  Flags_DoubleWide = 0x04;   // display the character as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+		static const unsigned char  Flags_WrapLine = 0x08;     // wrap text to next line
+		unsigned char bFlags;    // above flags to indicate special handling.
+		unsigned char nRows;     // number of rows in the bitmap font table of character bitmaps
+		unsigned char nCols;     // number of columns in the bitmap font table of character bitmaps. also font height or width in pixels.
+		unsigned char *table;    // pointer to a bitmap font table of character bitmaps, static const unsigned char font_table[nRows][nCols];
+								 // bitmap font table starts with bitmap for space character, 0x20, not control character 0x00.
 	};
 
 	Font() { begin(); }
@@ -39,12 +52,30 @@ public:
 	FontPos getTxtPosRight(void) { FontPos p = { txt_x1, txt_y1 }; return p; }
 	void	lcd_string(const char str[]);
 
+	static void set_fonttable(unsigned short nRows, unsigned short nCols, unsigned char *pTable, unsigned char flags);
+	static unsigned char  Font::mod_fonttable(unsigned char flags = 0);
+
 private:
+#if !defined(USE_FONT_NONE)
+#if defined(USE_FONT_8_B)
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][8];
+#else
+	static const unsigned char Font::font_table_local[96][8];
+#endif
+#else
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][16]; 
+#else
+	static const unsigned char Font::font_table_local[95][16];
+#endif
+#endif
+#endif
+	static const unsigned short  font_leading = 6;     // interval between rows in pixels.
+	static const unsigned short	 font_interval = 2;    // interval between characters in pixels. kerning.
+	static FontTable font_table;      // configurable bitmap font font table to use for text.
 	unsigned short	font_color;       // foreground or font color in RGB565 format
 	unsigned short	txt_backcolor;    // background color in RGB565 format
-	unsigned short	font_size;        // font height in pixels.
-	unsigned short  font_leading;     // interval between rows in pixels.
-	unsigned short	font_interval;    // interval between characters in pixels. kerning.
 	unsigned short	txt_x0;           // top left row coordinate for text area
 	unsigned short	txt_y0;           // top left column coordinate for text area
 	unsigned short	txt_x1;           // bottom right row coordinate for text area

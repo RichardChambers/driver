@@ -28,7 +28,7 @@ public:
 		static void     draw_area(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1, TftColor color);
 		static void 	draw_edge(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short size, TftColor color);
 
-		static void     draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap);
+		static void     draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags);
 		static void 	set_pixl(unsigned short x, unsigned short y, TftColor color);
 		static void     draw_buttom_edge(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short circular_size, TftColor color);
 		static void	    draw_buttom(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short circular_size, TftColor color);

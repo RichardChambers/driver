@@ -716,9 +716,19 @@ static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned sho
 		}
 }
 
-static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap)
+static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
 {
-	set_area(x0, y0, x0 + 7, y0);
+	// we will fill a single row of 8 pixels by iterating over
+	// a bitmap font map of which pixels to set to the foreground
+	// color and which pixels to set to the background color for this
+	// part of the character to display.
+	// we will iterate over least significant bit through the most
+	// significant bit using a left shift.
+
+	if (flags & 0x01)
+		set_area(x0, y0, x0 + 15, y0);
+	else
+		set_area(x0, y0, x0 + 7, y0);
 	for (unsigned char char_n = 1; char_n; char_n <<= 1)
 	{
 		if (bitMap & char_n)
@@ -729,6 +739,17 @@ static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 		else {
 			w_data(bg_color >> 8);
 			w_data(bg_color);
+		}
+		if (flags & 0x01) {
+			if (bitMap & char_n)
+			{
+				w_data(fg_color >> 8);
+				w_data(fg_color);
+			}
+			else {
+				w_data(bg_color >> 8);
+				w_data(bg_color);
+			}
 		}
 	}
 }
@@ -853,12 +874,20 @@ static void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsig
  ****************************************/
 static unsigned short   TFTLCD::RGB_TO_565(unsigned char r, unsigned char g, unsigned char b)
 {
- unsigned short _RGB = ((unsigned short)r >> 3) << 11;
+	// NOTE: Since the RGB565 color value has less bits for each color component,
+	//       8 bit values of RGB converted to either a 5 bit value or a 6 bit value,
+	//       this function drops a couple of the least significant bits of the RGB color
+	//       value in the conversion. So an RGB color of 0x0f0f0f will be converted
+	//       to an RGB color of 0x080608. This loss of color precision could result
+	//       in slightly different RGB color values being displayed as the same color
+	//       and result in a loss of smoothness across a gradient.
+
+	 unsigned short _RGB = ((unsigned short)r >> 3) << 11;
  
- _RGB |= ((unsigned short)g >> 2 ) << 5;
+	 _RGB |= ((unsigned short)g >> 2 ) << 5;
  
- _RGB |= ((unsigned short)b >> 3);
- return _RGB;
+	 _RGB |= ((unsigned short)b >> 3);
+	 return _RGB;
 }
 
 static void   TFTLCD::R565_TO_RGB(TftColor color, unsigned char rgb[3])
