@@ -3,79 +3,87 @@
 #include "KeDei_font.h"
 #include "KeDei_button.h"
 
-#define backcolor 0xf800
-//LCD class object is TFT
-TFTLCD TFT;
+#include <stdlib.h>
+
+static const TFTLCD::TftColor backcolor = TFTLCD::RGB_TO_565(255,100,100);
+
 //Font class object is font
 Font  font;
-//Touchuscreem TP class object is tp
-TP tp;
+Font  font2;
+
 //Two Button class object is  Button1,Button2
 Button  Button1,Button2;
 int value =1688;
+
+void lcd_display_int (int iVal, Font &aFont)
+{
+  char buffer[12];
+
+  aFont.lcd_string(itoa (iVal, buffer, 10));
+}
+
 void setup() {
   //TFT initialization
-   TFT.begin();
+   TFTLCD::begin();
    //LCD Clear the screen, backcolor
-   TFT.clear(backcolor);
-   
+   TFTLCD::clear(backcolor);
    
    font.begin();
    //Set the text area for the upper left corner (30, 10), the lower right corner (320,200), the color red, if the color is NULL or R0 G0 B0(black), is also not set text color 
-   font.set_txt(5,5,320,200,TFT.RGB_TO_565(255,0,0));
+   font.set_txt(5,5,320,200,backcolor);
    
    //Set the text font color
-   font.set_fontcolor(TFT.RGB_TO_565(0,0,255));
-   //Displays a string
+   font.set_fontcolor(TFTLCD::RGB_TO_565(0,0,255));
+   //Displays the title and instructions
    font.lcd_string("KeDeiTFT");
    font.lcd_string("show int number add and reduce");
    
    //Draw the first round button1
-   Button1.drawButton(100,100,1,"-");
+   Button1.drawButton(100,100,1,"-",font2);
    //Draw the second round button
-   Button2.drawButton(100,250,0,"+");
+   Button2.drawButton(100,250,0,"+",font2);
 
-
-   font.set_txt(100,180,140,197,TFT.RGB_TO_565(255,0,0));
-   font.lcd_int(value);
+   font.set_txt(100,180,140,197,backcolor);
+   font.set_fontcolor(TFTLCD::RGB_TO_565(0,0,255));
+   font.mod_fonttable(Font::FontTable::Flags_DoubleHigh);
+   lcd_display_int(value,font);
 }
 
 void loop() {
-  //check Touch current state detection
-  tp.pen_down();
-      //The touch screen is touch
-      if(tp.flag&&tp.y_val&&tp.x_val)
-         //Check whether pressing the first button
-        if(Button1.istouch(tp.x,tp.y))
-        {
-          //Touch screen alway be pressed
-           for(;tp.flag;)
-           {
-             //value add by 9
-             value -= 9;
-             //clear the text area
-            font.set_txt(100,180,140,197,TFT.RGB_TO_565(255,0,0));
-             //Displays new value
-             font.lcd_int(value);
-            // delay(500);
-             tp.pen_down();
-           }
-           //Button to restore the original appearance
-           Button1.penup();
-        }
-        else
-        if(Button2.istouch(tp.x,tp.y))
-        {
-           for(;tp.flag;)
-            {
-               //value reduce by 9
-               value += 9;
-               font.set_txt(100,180,140,197,TFT.RGB_TO_565(255,0,0));
-               font.lcd_int(value);
-              //   delay(500);
-               tp.pen_down();
-           }
-           Button2.penup();
-        }
-      
+    //check Touch current state detection
+    TP::pen_down();
+    
+    //Is there a pending touch with valid y and x coordinates?
+    if(TP::flag && TP::y_val && TP::x_val) {
+      //Check whether the x,y coordinates are in the area of
+      // one of our buttons and the  button has not yet been pressed.
+      // the istouch() function will set the penDownFlag if the
+      // coordinates are in the button area indicating a button press.
+
+      // check Button1. must do the penDownFlag check before the istouch()
+      // is called since istouch() will modify penDownFlag. this logic will
+      // ensure only a single button press event per cycle of pendown and penup.
+      if(Button1.penDownFlag == 0 && Button1.istouch(TP::x,TP::y))
+      {
+           //value add by 9
+           value -= 9;
+           //Displays new value
+           lcd_display_int(value,font);
+      }
+
+      if(Button2.penDownFlag == 0 && Button2.istouch(TP::x,TP::y))
+      {
+           //value increase by 9
+           value += 9;
+           lcd_display_int(value,font);
+      }
+
+    } else {
+      // none of our buttons are pressed so lets ensure that
+      // all buttons are showing the not pressed style.
+      // penup() also clears the penDownFlag so that the next
+      // successful istouch() will set it again.
+      Button1.penup();
+      Button2.penup();        
+    }
 }
