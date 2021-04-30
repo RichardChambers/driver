@@ -112,8 +112,8 @@ Another useful addition are the text drawing flags which allow the user of the l
 treatment to the text as it is drawn. These flags are bit constants which can be combined with the bitwise
 logic operators. The flags are:
  -	Flags_UpperOnly - the bitmap font table has upper case letters only
-	-	Flags_DoubleHigh - display the text as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
-	-	Flags_DoubleWide - display the text as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+ -	Flags_DoubleHigh - display the text as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+ -	Flags_DoubleWide - display the text as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
 
 The user of the library can use these flags to vary the look of the text displayed allowing a greater variety in the
 user interface.
