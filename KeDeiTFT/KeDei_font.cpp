@@ -280,6 +280,8 @@ void Font::begin(void)
 {
 		font_color	  = 0xf800;    // RGB565 value for red
 		txt_backcolor = 0xffff;    // RGB565 value for white
+		font_flags = font_table.bFlags;
+
 		// Set the default screen region for the text area.
 		// The default is the entire screen however this can
 		// be modified with the set_txt() method.
@@ -312,6 +314,18 @@ void Font::set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigne
 	now_y			= y0;
 	txt_backcolor	= txt_b_color;
 	TFTLCD::draw_area(x0, y0, x1, y1, txt_b_color);
+}
+
+unsigned short Font::size_width(char *s1)
+{
+	char *s1x = s1;
+	for (; *s1; s1++);
+	return (s1 - s1x) * ((font_table.nCols + (font_flags & FontTable::Flags_DoubleWide) ? font_table.nCols : 0) + 0);
+}
+
+unsigned short Font::size_height()
+{
+	return ((font_table.nCols + (font_flags & FontTable::Flags_DoubleHigh) ? font_table.nCols : 0) + 0);
 }
 
 /*****************************************
@@ -353,7 +367,7 @@ void Font::lcd_char(char _data)
 	case '\n':
 		// new line means go to beginning of next line.
 		now_y += font_table.nCols + font_leading;
-		if (font_table.bFlags & FontTable::Flags_DoubleHigh) now_y += font_table.nCols;
+		if (font_flags & FontTable::Flags_DoubleHigh) now_y += font_table.nCols;
 		now_x = txt_x0;
 		return;
 	case '\r':
@@ -366,19 +380,19 @@ void Font::lcd_char(char _data)
 	// Check the current write position (now_x, now_y) to ensure
 	// that we position the cursor at a position where there
 	// is room to write at least one character within our text region.
-	if (now_x > txt_x1 - (font_table.nCols + (font_table.bFlags & FontTable::Flags_DoubleWide) ? font_table.nCols : 0))
+	if (now_x > txt_x1 - (font_table.nCols + (font_flags & FontTable::Flags_DoubleWide) ? font_table.nCols : 0))
 	{
-		if (font_table.bFlags & FontTable::Flags_WrapLine) {
+		if (font_flags & FontTable::Flags_WrapLine) {
 			// move the write position cursor to the beginning of the
 			// next line.
 			now_x = txt_x0;
 			now_y += font_table.nCols + font_leading;
-			if (font_table.bFlags & FontTable::Flags_DoubleHigh) now_y += font_table.nCols;
+			if (font_flags & FontTable::Flags_DoubleHigh) now_y += font_table.nCols;
 		}
 		else
 			return;
 	}
-	if(now_y > txt_y1 - (font_table.nCols + (font_table.bFlags & FontTable::Flags_DoubleHigh) ? font_table.nCols : 0))
+	if(now_y > txt_y1 - (font_table.nCols + (font_flags & FontTable::Flags_DoubleHigh) ? font_table.nCols : 0))
 	{
 		// if we are at the below the text region then reset our position
 		// back to the top of the region. Wrap around to top in other words.
@@ -397,7 +411,7 @@ void Font::lcd_char(char _data)
 	if (_data > 'z') return;
 	if (_data >= 'a') _data = _data - 'a' + 'A';
 #else
-	if (font_table.bFlags & FontTable::Flags_UpperOnly) if (_data >= 'a') _data = _data - 'a' + 'A';
+	if (font_flags & FontTable::Flags_UpperOnly) if (_data >= 'a') _data = _data - 'a' + 'A';
 #endif
 	unsigned char char_i = _data - ' ';  // font table starts with space, 0x20, not control character 0x00.
 
@@ -407,11 +421,11 @@ void Font::lcd_char(char _data)
 
 	for(unsigned char char_m = 0; char_m < font_table.nCols ; char_m++)
 	{
-		TFTLCD::draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table.table[char_i_x + char_m], ((font_table.bFlags & FontTable::Flags_DoubleWide) ? 1 : 0));
+		TFTLCD::draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table.table[char_i_x + char_m], ((font_flags & FontTable::Flags_DoubleWide) ? 1 : 0));
 		// shift down to the next row of pixels for the character
 		 now_y++;
-		 if (font_table.bFlags & FontTable::Flags_DoubleHigh) {
-			 TFTLCD::draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table.table[char_i_x + char_m], ((font_table.bFlags & FontTable::Flags_DoubleWide) ? 1 : 0));
+		 if (font_flags & FontTable::Flags_DoubleHigh) {
+			 TFTLCD::draw_glyph(now_x, now_y, font_color, txt_backcolor, font_table.table[char_i_x + char_m], ((font_flags & FontTable::Flags_DoubleWide) ? 1 : 0));
 			 // shift down to the next row of pixels for the character
 			 now_y++;
 		 }
@@ -419,7 +433,7 @@ void Font::lcd_char(char _data)
 	// reposition the cursor to the pixel position for the top left
 	// of this character we've just displayed.
 	now_y = now_y_save;
-	now_x += font_table.nCols + ((font_table.bFlags & FontTable::Flags_DoubleWide) ? font_table.nCols :  0) + font_interval;
+	now_x += font_table.nCols + ((font_flags & FontTable::Flags_DoubleWide) ? font_table.nCols :  0) + font_interval;
 }
 
 /*****************************************

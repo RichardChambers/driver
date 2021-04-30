@@ -26,6 +26,8 @@ public:
 		static void	    h_line(unsigned short x,unsigned short y,unsigned short len, TftColor color);
 
 		static void     draw_area(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1, TftColor color);
+		static bool     touch_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short px, unsigned short py);
+
 		static void 	draw_edge(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short size, TftColor color);
 
 		static void     draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags);
@@ -37,6 +39,7 @@ public:
 
 
 		static void	draw_circle(unsigned short x,unsigned short y,unsigned short R, TftColor color);
+		static bool touch_circle(unsigned short x, unsigned short y, unsigned short R, unsigned short px, unsigned short py);
 		static void	draw_ring(unsigned short x,unsigned short y,unsigned short OR,unsigned short IR, TftColor color);
 		static void	FillCircle(unsigned short x,unsigned short y,unsigned short R, TftColor color);
 

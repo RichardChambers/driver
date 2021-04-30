@@ -85,8 +85,7 @@ void Button::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder
 		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
 	}
 
-	unsigned short len = strlen(str);
-	myFont.set_txt(x + x_size / 2 - 9 * len / 2, y + y_size / 2 - 8, x + x_size - 2, y + y_size - 2, button_color);
+	myFont.set_txt(x + x_size / 2 - myFont.size_width(str) / 2, y + y_size / 2 - myFont.size_height() / 2, x + x_size - 2, y + y_size - 2, button_color);
 
 	myFont.set_fontcolor(font_color);
 	myFont.lcd_string(str);
@@ -102,13 +101,7 @@ void Button::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder
  ****************************************/
 bool Button::istouch(unsigned short _x, unsigned short _y)
 {
-	if(x < _x && _x < x + x_size)
-		if(y < _y && _y < y + y_size)
-		{
-			pendown();
-			return true;
-		}
-	return false;
+	return TFTLCD::touch_area(x, y, x + x_size, y + y_size, _x, _y) && pendown();
 }
 
 /*****************************************
@@ -119,7 +112,7 @@ bool Button::istouch(unsigned short _x, unsigned short _y)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::pendown(void)
+bool Button::pendown(void)
 {
 	penDownFlag = 1;     // indicate pen down state which is cleared when penup() is called.
 	if(botton_moder)
@@ -130,6 +123,8 @@ void Button::pendown(void)
 	{
 		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_down_color);
 	}
+
+	return true;   // always return true to allow use in logical expressions
 }
 
 /*****************************************
@@ -140,7 +135,7 @@ void Button::pendown(void)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::penup(void)
+bool Button::penup(void)
 {
 	penDownFlag = 0;     // indicate pen down state is cleared by a penup(). pen down state is set by pindown().
 	if(botton_moder)
@@ -151,6 +146,8 @@ void Button::penup(void)
 	{
 		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
 	}
+
+	return true;   // always return true to allow use in logical expressions
 }
 
 /*if you want  to change the button size or the color,you can use  the  follow function to achieve your purpose,

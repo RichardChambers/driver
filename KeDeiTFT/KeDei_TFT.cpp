@@ -716,6 +716,11 @@ static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned sho
 		}
 }
 
+static bool TFTLCD::touch_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short px, unsigned short py)
+{
+	return (x0 <= px && px < x1 && y0 <= py && py < y1);
+}
+
 static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
 {
 	// we will fill a single row of 8 pixels by iterating over
@@ -930,6 +935,12 @@ static void TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned sho
 	}
 }
 
+static bool TFTLCD::touch_circle(unsigned short x, unsigned short y, unsigned short R, unsigned short px, unsigned short py)
+{
+	long xD = (x - px) * (x - px) + (y - py) * (y - py);
+
+	return (((long)R * (long)R) >= xD);
+}
 
 /*****************************************
  *The function name £º draw_ring

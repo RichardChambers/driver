@@ -30,8 +30,8 @@ public:
 
 	void drawButton(unsigned short _x, unsigned short _y, bool _botton_moder, const char *str, Font & myFont);
 	bool istouch(unsigned short _x, unsigned short _y);
-	void pendown(void);
-	void penup(void);
+	bool pendown(void);
+	bool penup(void);
 	/*if you want  to change the butom size or the color,you can use  the  follow function to achieve your purpose,
 	but you  must do it before use the drawbutton() function;also  if you  always change the auto value ,you can change the button() function*/
 	void resetsize(unsigned char _x_size, unsigned char _y_size);

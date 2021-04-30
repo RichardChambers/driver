@@ -14,9 +14,9 @@
 // is about half the size of the original bitmap font table.
 // See https://github.com/dhepper/font8x8
 
-#define USE_FONT_NONE
+//#define USE_FONT_NONE
 //#define SMALLER_FONT_TABLE
-//#define USE_FONT_8_B
+#define USE_FONT_8_B
 
 class Font {
 public:
@@ -50,7 +50,11 @@ public:
 	FontPos setFontPos(FontPos p0) { FontPos p = { now_x, now_y }; now_x = p0.x; now_y = p0.y; return p; }
 	FontPos getTxtPosLeft(void) { FontPos p = { txt_x0, txt_y0 }; return p; }
 	FontPos getTxtPosRight(void) { FontPos p = { txt_x1, txt_y1 }; return p; }
+	unsigned char setFontFlags(unsigned char xFlags) { unsigned char x = font_flags; font_flags = xFlags; return x; }
 	void	lcd_string(const char str[]);
+
+	unsigned short size_width(char *s1);
+	unsigned short size_height();
 
 	static void set_fonttable(unsigned short nRows, unsigned short nCols, unsigned char *pTable, unsigned char flags);
 	static unsigned char  Font::mod_fonttable(unsigned char flags = 0);
@@ -73,9 +77,13 @@ private:
 #endif
 	static const unsigned short  font_leading = 6;     // interval between rows in pixels.
 	static const unsigned short	 font_interval = 2;    // interval between characters in pixels. kerning.
+
 	static FontTable font_table;      // configurable bitmap font font table to use for text.
+
 	unsigned short	font_color;       // foreground or font color in RGB565 format
 	unsigned short	txt_backcolor;    // background color in RGB565 format
+	unsigned char   font_flags;       // font specific flags to override what is in the global font_table.
+
 	unsigned short	txt_x0;           // top left row coordinate for text area
 	unsigned short	txt_y0;           // top left column coordinate for text area
 	unsigned short	txt_x1;           // bottom right row coordinate for text area
