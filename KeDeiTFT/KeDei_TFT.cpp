@@ -23,29 +23,6 @@ void TFTLCD::begin(void)
  ****************************************/
 static void  TFTLCD::cmd(unsigned char cmd)
 {
-	// Port manipulation
-	//
-	// Port registers allow for lower-level and faster manipulation of the I/O
-	// pins of the microcontroller on an Arduino board. The chips used on the
-	// Arduino board (the ATmega8 and ATmega168) have three ports:
-	//  - B(digital pin 8 to 13)
-	//  - C(analog input pins)
-	//  - D(digital pins 0 to 7)
-	//
-	// Each port is controlled by three registers, which are also defined
-	// variables in the Arduino language. The DDR register, determines whether
-	// the pin is an INPUT or OUTPUT. The PORT register controls whether the
-	// pin is HIGH or LOW, and the PIN register reads the state of INPUT pins
-	// set to input with pinMode(). The maps of the ATmega8 and ATmega168 chips
-	// show the ports. The newer Atmega328p chip follows the pinout of the
-	// Atmega168 exactly.
-	//
-	// For more details see the following articles.
-    //   https://www.arduino.cc/en/Reference/PortManipulation
-	//   https://www.instructables.com/Arduino-and-Port-Manipulation/
-	//   https://www.digikey.com/en/blog/the-case-for-direct-port-manipulation
-	//   https://wolles-elektronikkiste.de/en/logical-operations-and-port-manipulation
-	//   https://wiki.wpi.edu/robotics/Port_manipulation_and_digitalWrite()
 
 #ifdef   __AVR_ATmega328P__
 
@@ -89,9 +66,7 @@ static void  TFTLCD::cmd(unsigned char cmd)
 static void  TFTLCD::w_data(unsigned char data)
 {
 #ifdef  __AVR_ATmega328P__
-	// See above notes on port manipulation with the
-	// Arduino.
-
+	
 	PORTC=(PORTC&0Xfa)|0x0a;
 	PORTB=(0xfc&PORTB)|(0x03&data);
 	PORTD=(0x03&PORTD)|(0xfc&data);
@@ -123,9 +98,7 @@ static void  TFTLCD::w_data(unsigned char data)
 static int TFTLCD::r_data(void)
 {
 #ifdef  __AVR_ATmega328P__22
-	// See above notes on port manipulation with the
-	// Arduino.
-
+	
 	PORTC=(PORTC&0Xfa)|0x0a;
 	PORTB=(0xfc&PORTB)|(0x03&data);
 	PORTD=(0x03&PORTD)|(0xfc&data);
@@ -1052,16 +1025,6 @@ static void   TFTLCD::draw_sin(int x, int y, float A, float w, float r, TftColor
 }
 
 
-//  Bresenham's line algorithm is a line drawing algorithm
-//  that determines the points of an n-dimensional raster that
-//  should be selected in order to form a close approximation
-//  to a straight line between two points. It is commonly used
-//  to draw line primitives in a bitmap image (e.g. on a
-//  computer screen), as it uses only integer addition,
-//  subtraction and bit shifting, all of which are very cheap
-//  operations in standard computer architectures.
-//  https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-//
 static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color)
 {
 	if (y0==y1)

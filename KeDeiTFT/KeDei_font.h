@@ -15,7 +15,7 @@
 // See https://github.com/dhepper/font8x8
 
 //#define USE_FONT_NONE
-//#define SMALLER_FONT_TABLE
+#define SMALLER_FONT_TABLE
 #define USE_FONT_8_B
 
 class Font {
