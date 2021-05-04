@@ -163,11 +163,11 @@ void TFTLCD::clear(TftColor color)
 
 	cmd(0x2a);    
 
-    if(MODULE == _MODULE_1_)
+    if(TFTLCD::MODULE == _MODULE_1_)
     {
 #ifdef  ROTATE_0||ROTATE_180
-		x_all=240;
-		y_all=320;
+		TFTLCD::x_all = 240;
+		TFTLCD::y_all = 320;
 		w_data(0x00);     // first parameter SC[15:8]
 		w_data(0x00);     // second parameter SC[7:0]
 		w_data(0x00);     // third parameter EC[15:8], 0x00ef = 239
@@ -186,8 +186,8 @@ void TFTLCD::clear(TftColor color)
 #endif
 
 #ifdef  ROTATE_90||ROTATE_270
-		x_all=320;
-		y_all=240;
+		TFTLCD::x_all = 320;
+		TFTLCD::y_all = 240;
 		w_data(0x00);
 		w_data(0x00);
 		w_data(0x01);
@@ -204,8 +204,8 @@ void TFTLCD::clear(TftColor color)
     else
     {
 #ifdef  ROTATE_0||ROTATE_180
-		x_all=320;
-		y_all=480;
+		TFTLCD::x_all = 320;
+		TFTLCD::y_all = 480;
 		w_data(0x00);
 		w_data(0x00);
 		w_data(0x01);
@@ -219,8 +219,8 @@ void TFTLCD::clear(TftColor color)
 #endif
 
 #ifdef  ROTATE_90||ROTATE_270
-		x_all=480;
-		y_all=320;
+		TFTLCD::x_all = 480;
+		TFTLCD::y_all = 320;
 		w_data(0x00);
 		w_data(0x00);
 		w_data(0x01);
@@ -241,12 +241,12 @@ void TFTLCD::clear(TftColor color)
 
 	cmd(0x2c); 
 
-	for(unsigned short i = y_all; i > 0; i--)
-		for(unsigned short j = x_all; j > 0; j--)
-	{
+	for(unsigned short i = TFTLCD::y_all; i > 0; i--)
+		for(unsigned short j = TFTLCD::x_all; j > 0; j--)
+	    {
 			w_data(color>>8);
 			w_data(color);
-	}
+	    }
 }
 
 static void TFTLCD::gpio_init()
@@ -302,11 +302,11 @@ void TFTLCD::tft_init()
 
 	cmd(0x04);
 	r_data();
-	if(r_data() ==133)
+	if(r_data() == 133)
 	{
-		if(r_data() ==133)
+		if(r_data() == 133)
 		{
-			MODULE=_MODULE_1_ ;
+			TFTLCD::MODULE = _MODULE_1_ ;
 		}
 	}
 	else
@@ -322,11 +322,11 @@ void TFTLCD::tft_init()
 		cmd(0xD3);
 		r_data();
 		r_data();
-		if(r_data() ==148)
+		if(r_data() == 148)
 		{
-			if(r_data() ==134)
+			if(r_data() == 134)
 			{
-				MODULE=_MODULE_2_ ;
+				TFTLCD::MODULE = _MODULE_2_ ;
 			}
 		}
 		else
@@ -340,13 +340,13 @@ void TFTLCD::tft_init()
     }
 */
 
-			MODULE=_MODULE_3_ ;
+			TFTLCD::MODULE = _MODULE_3_ ;
 		}
 #ifdef  _ALL_MODULE_
     }
 #endif
 
-	if(MODULE == _MODULE_3_)
+	if(TFTLCD::MODULE == _MODULE_3_)
 	{
 		cmd(0x11); //Sleep Out
 		delay(12);
@@ -428,7 +428,7 @@ void TFTLCD::tft_init()
 		cmd(0x2C); //Write SRAM Data
 	}
 	else
-	if(MODULE==_MODULE_2_)
+	if(TFTLCD::MODULE == _MODULE_2_)
 	{
 
 		cmd(0xF1);
@@ -659,7 +659,7 @@ static void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned shor
  ****************************************/
 static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
-	if((y + len) > y_all) len = y_all - y - 1;
+	if((y + len) > TFTLCD::y_all) len = TFTLCD::y_all - y - 1;
 	set_area(x, y, x, y + len);
 
 	for( ; len > 0; len--)
@@ -680,7 +680,7 @@ static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short le
  ****************************************/
 static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
-	if((x+len) > x_all) len = x_all - x - 1;
+	if((x + len) > TFTLCD::x_all) len = TFTLCD::x_all - x - 1;
 	set_area(x, y, x + len, y);
 
 	for(len; len > 0; len--)
@@ -701,8 +701,8 @@ static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short le
  ****************************************/
 static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
 {
-	if (x1 >= x_all) x1 = x_all - 1;
-	if (y1 >= y_all) y1 = y_all - 1;
+	if (x1 >= TFTLCD::x_all) x1 = TFTLCD::x_all - 1;
+	if (y1 >= TFTLCD::y_all) y1 = TFTLCD::y_all - 1;
 	if(x0 > x1)	return;
 	if(y0 > y1) return;
 
@@ -952,19 +952,12 @@ static bool TFTLCD::touch_circle(unsigned short x, unsigned short y, unsigned sh
  ****************************************/
 static void TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short OR, unsigned short IR, TftColor color)
 {
-
-	/*int i;
-	for(i = IR;i <= OR;i++)
-		draw_circle(x,y,i,color);
-
-*/
-
-	for(int y0 = 0; y0 < OR; y0++)
+	for(unsigned short y0 = 0; y0 < OR; y0++)
 	{
-		for(int x0 = 0; x0 < OR; x0++)
+		for(unsigned short x0 = 0; x0 < OR; x0++)
 		{
-			int value = x0 * x0 + y0 * y0;
-			if((value <= (OR * OR)) && (value >= (IR * IR)))
+			unsigned long value = (unsigned long)x0 * (unsigned long)x0 + (unsigned long)y0 * (unsigned long)y0;
+			if((value <= ((unsigned long)OR * (unsigned long)OR)) && (value >= ((unsigned long)IR * (unsigned long)IR)))
 			{
 				set_pixl(x - x0, y - y0, color);   
 				set_pixl(x - x0, y + y0, color);  
@@ -988,8 +981,8 @@ static void TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned shor
 	int d = 1 - R;                  
 	for(int y0 = R; y0 >= x0; )
 	{
-		 draw_area(-y0+x,x0+y,y0+x,x0+y,color);
-		 draw_area(-y0+x,-x0+y,y0+x,-x0+y,color);
+		 draw_area(-y0 + x, x0 + y, y0 + x, x0 + y, color);
+		 draw_area(-y0 + x, -x0 + y, y0 + x, -x0 + y, color);
 		 
 		if(d < 0)
 			d = d + 2 * x0 + 3;                       
@@ -997,8 +990,8 @@ static void TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned shor
 		{
 			d = d + 2 * (x0 - y0) + 5;                  
 			y0--;
-			draw_area(-x0+x,-y0+y,x0+x,-y0+y,color);
-			draw_area(-x0+x,y0+y,x0+x,y0+y,color);
+			draw_area(-x0 + x, -y0 + y, x0 + x, -y0 + y, color);
+			draw_area(-x0 + x, y0 + y, x0 + x, y0 + y, color);
 		}
 		x0++;                                         
 	}
@@ -1018,19 +1011,31 @@ static void TFTLCD::draw_pixl(unsigned short x, unsigned short y, unsigned short
 
 static void   TFTLCD::draw_sin(int x, int y, float A, float w, float r, TftColor color)
 {
-	for(float i = x; i < 315; i++)
+	for(float i = x; i < 315.0; i++)
 	{
-		 draw_pixl(i,A*sin(i/w+r)+y,0,color);
+		 draw_pixl(i, A * sin(i / w + r) + y, 0, color);
 	}
 }
 
-
+/*
+ * Bresenham's line algorithm is a line drawing algorithm that determines
+ * the points of an n-dimensional raster that should be selected in order 
+ * to form a close approximation to a straight line between two points. It
+ * is commonly used to draw line primitives in a bitmap image (e.g. on a
+ * computer screen), as it uses only integer addition, subtraction and bit
+ * shifting, all of which are very cheap operations in standard computer
+ * architectures. It is an incremental error algorithm. It is one of the
+ * earliest algorithms developed in the field of computer graphics. An
+ * extension[which?] to the original algorithm may be used for drawing circles.
+ *
+ * https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+*/
 static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color)
 {
-	if (y0==y1)
-		h_line(x0, y0, x1-x0,color);
-	else if (x0==x1)
-		v_line(x0, y0, y1-y0,color);
+	if (y0 == y1)
+		h_line(x0, y0, x1 - x0, color);
+	else if (x0 == x1)
+		v_line(x0, y0, y1 - y0, color);
 	else
 	{
 		unsigned int	dx = (x1 > x0 ? x1 - x0 : x0 - x1);
@@ -1044,8 +1049,8 @@ static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color
 			int t = - (dy >> 1);
 			while (true)
 			{
-				//draw_pixl(col, row,1,color);
-				set_pixl(col, row,color);
+				//draw_pixl(col, row, 1, color);
+				set_pixl(col, row, color);
 				if (row == y1)
 					return;
 				row += ystep;
@@ -1062,8 +1067,8 @@ static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color
 			int t = - (dx >> 1);
 			while (true)
 			{
-				//draw_pixl(col, row,1,color);
-				set_pixl(col, row,color);
+				//draw_pixl(col, row,1, color);
+				set_pixl(col, row, color);
 				if (col == x1)
 					return;
 				col += xstep;
@@ -1076,6 +1081,4 @@ static void TFTLCD::Bresenhamline(int x0, int y0, int x1, int y1, TftColor color
 			} 
 		}
 	}
-
-     // draw_pixl (x, int(y),1, color); 
 }

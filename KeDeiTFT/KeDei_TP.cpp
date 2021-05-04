@@ -23,7 +23,7 @@ static void TP::get_xy(void)
 	// when we process the actual raw touch data values
 	// we will test whether each of the coordinates is
 	// possibly not valid with flas x_val and y_val.
-	flag = true;
+	TP::flag = true;
 
 #ifdef  __AVR_ATmega328P__
 	DDRC|=2;
@@ -80,7 +80,7 @@ static void TP::get_xy(void)
 	// values is sufficiently small and the raw data value
 	// we will use in our touch position calculation is
 	// reasonable.
-	x_val = ((tp_max - tp_min) < 50);
+	TP::x_val = ((tp_max - tp_min) < 50);
 
 	// create an average by throwing out the largest and smallest
 	// values read and then divide by the count of the remaining values.
@@ -90,19 +90,19 @@ static void TP::get_xy(void)
 	if(TFTLCD::MODULE == _MODULE_1_)
 	{
 #ifdef  ROTATE_0
-		x = (tp_temp - 104) * 24 / 73;
+		TP::x = (tp_temp - 104) * 24 / 73;
 #endif
 	}
 	else
 	{
-		x = (tp_temp - 109) * 32 / 74;
+		TP::x = (tp_temp - 109) * 32 / 74;
 	}
 
 #if 0
 	// debug output when troubleshooting incorrect
 	// touch position coordinates.
 	Serial.print("  x = ");
-	Serial.print(x);
+	Serial.print(TP::x);
 	Serial.print("  tp_max = ");
 	Serial.print(tp_max);
 	Serial.print("  tp_min = ");
@@ -152,25 +152,25 @@ static void TP::get_xy(void)
 	// values is sufficiently small and the raw data value
 	// we will use in our touch position calculation is
 	// reasonable.
-	y_val = ((tp_max - tp_min) < 50);
+	TP::y_val = ((tp_max - tp_min) < 50);
 
 	tp_temp = (tp_temp - tp_max - tp_min) / 10;
 	if(TFTLCD::MODULE == _MODULE_1_)
 	{
 #ifdef  ROTATE_0
-		y = (tp_temp - 70) * 32 / 75;
+		TP::y = (tp_temp - 70) * 32 / 75;
 #endif
 	}
 	else
 	{
-		y = (tp_temp - 73) * 48 / 78;
+		TP::y = (tp_temp - 73) * 48 / 78;
 	}
 
 #if 0
 	// debug output when troubleshooting incorrect
 	// touch position coordinates.
 	Serial.print("  y = ");
-	Serial.print(y);
+	Serial.print(TP::y);
 	Serial.print("  tp_max = ");
 	Serial.print(tp_max);
 	Serial.print("  tp_min = ");
@@ -207,10 +207,10 @@ static bool TP::pen_down()
 	// initialize the various flags to false and then
 	// let get_xy(), if it is called, do the honors of
 	// setting them appropriately.
-	flag = false;      // no touch coordinates available
-	y_val = false;     // x coordinate of touch position is invalid
-	x_val = false;     // y coordinate of touch position is invalid
-	x = y = 0;         // initialize the coordinates to a known value.
+	TP::flag = false;      // no touch coordinates available
+	TP::y_val = false;     // x coordinate of touch position is invalid
+	TP::x_val = false;     // y coordinate of touch position is invalid
+	TP::x = TP::y = 0;         // initialize the coordinates to a known value.
 	analogRead(XP);    // read the y coordinate line and discard allow the line to settle to a known state
 	if (200 > analogRead(XP))
 	{
@@ -226,5 +226,5 @@ static bool TP::pen_down()
 	pinMode(XM,OUTPUT);
 	pinMode(YP,OUTPUT);
 
-	return flag;
+	return TP::flag;
 }
