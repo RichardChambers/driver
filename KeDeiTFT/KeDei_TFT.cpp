@@ -937,7 +937,7 @@ static void TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned sho
 
 static bool TFTLCD::touch_circle(unsigned short x, unsigned short y, unsigned short R, unsigned short px, unsigned short py)
 {
-	long xD = (x - px) * (x - px) + (y - py) * (y - py);
+	long xD = ((long)x - (long)px) * ((long)x - (long)px) + ((long)y - (long)py) * ((long)y - (long)py);
 
 	return (((long)R * (long)R) >= xD);
 }
