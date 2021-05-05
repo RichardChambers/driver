@@ -21,7 +21,7 @@ void setup() {
   }
   Serial.println("SD OK!");
 
-  bmpFile = SD.open("pic3.bmp");
+  bmpFile = SD.open("pic1.bmp");
   if (! bmpFile) {
     Serial.println("didnt find image");
     while (1);
@@ -34,7 +34,7 @@ void setup() {
     bmpFile.close();
     
     
-  bmpFile = SD.open("pic3.bmp");
+  bmpFile = SD.open("pic1.bmp");
   Serial.print("image size "); 
   Serial.print(bmpWidth, DEC);
   Serial.print(", ");
@@ -180,4 +180,3 @@ uint32_t read32(File f) {
 }
 
   
-

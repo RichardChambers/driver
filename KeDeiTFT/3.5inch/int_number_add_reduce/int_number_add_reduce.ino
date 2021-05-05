@@ -63,7 +63,7 @@ void loop() {
       // check Button1. must do the penDownFlag check before the istouch()
       // is called since istouch() will modify penDownFlag. this logic will
       // ensure only a single button press event per cycle of pendown and penup.
-      if(Button1.penDownFlag == 0 && Button1.istouch(TP::x,TP::y))
+      if(Button1.isTouchState())
       {
            //value add by 9
            value -= 9;
@@ -71,7 +71,7 @@ void loop() {
            lcd_display_int(value,font);
       }
 
-      if(Button2.penDownFlag == 0 && Button2.istouch(TP::x,TP::y))
+      if(Button2.isTouchState())
       {
            //value increase by 9
            value += 9;

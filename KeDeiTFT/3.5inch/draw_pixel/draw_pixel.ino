@@ -274,13 +274,11 @@ void loop() {
         Serial.print("  tp_y = ");
         Serial.println(tp2.tp_y);
 #endif
-        if (clearButton.istouch(TP::x,TP::y)) {
-          if (clearButton.penDownFlag != 0) {
+        if (clearButton.isTouchState()) {
             refreshScreen ();
             // no touch event pending so clear the pendown() with a call to penup()
             // for each of the buttons displayed.
             clearButton.penup();
-          }
         } else {
            //draw  pixel
            TFTLCD::set_pixl(TP::x,TP::y,TFTLCD::RGB_TO_565(255,255,255));
