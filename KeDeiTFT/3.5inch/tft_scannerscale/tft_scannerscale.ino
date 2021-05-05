@@ -4,6 +4,12 @@
 #include "KeDei_font.h"
 #include "KeDei_button.h"
 
+
+// following define turns on the Serial debug output
+// when testing with the Arduino IDE.
+// for production this should be commented out.
+//#define USE_SERIAL
+
 #define backcolor 0xf800
 
 #if 0
@@ -82,12 +88,19 @@ Font  font1;        //Font class object for upper text region
 Font  font2;        //Font class object for buttons
 Font  font3;        //Font class object for lower text region
 
+static const TFTLCD::TftColor bgColorTop = TFTLCD::RGB_TO_565(60,150,70);
+static const TFTLCD::TftColor bgColorBottom = TFTLCD::RGB_TO_565(60,150,100);
+
 Button  scanButton;      // button to trigger sending current bar code as a scanner message
 
-Button  weightButton[4]; // buttons to change the weight setting. two to increment/decrement by one unit, second by .1 unit.
-Font::FontPos weightPos;
+// using shared buttons for the data change part of the UI as these can be
+// the same font and colors and such.
+ButtonData    weightData;
+ButtonShared  weightButton[4](weightData); // buttons to change the weight setting. first pair to increment/decrement by one unit, second by .1 unit.
 
-Button statusButton[4];  // buttons to change the status bytes. buttons toggle the setting. once to turn on, again to turn off.
+TFTLCD::TftPos weightPos;
+
+ButtonShared statusButton[4](weightData);  // buttons to change the status bytes. buttons toggle the setting. once to turn on, again to turn off.
 
 char cBuff[48] = {0};
 
@@ -113,8 +126,6 @@ const ScannerData pluList[] = {
   {"A", "070177154240"},          //    Twinings Irish Breakfast tea 20 bags
   {"A", "070177154127"},          //    Twinings Darjeeling tea 20 bags
   {"A", "072310001893"},          //    Bigelow Plantation Mint tea 20 bags
-  {"A", "072310001978"},          //    Bigelow Lemon Lift tea 20 bags
-  {"A", "072310001053"},          //    Bigelow Constant Comment tea 20 bags
   {"A", "747599303142"},          //    Ghirardelli Squares Dark Chocolate Sea Caramel
   {"E", "1215704"}                //    Aquafina bottled water 1L
 
@@ -162,6 +173,8 @@ unsigned char s1 = 0x30, s2 = 0x30;   // status byte 1 and status byte 2
 enum  ScaleUnits {English, Metric};
 ScaleUnits   iUnits = English;
 
+unsigned short usNotOnFileCounter = 0;    // if not zero then do Not On File tone countdown.
+
 enum DeviceSim { Device78xxScannerOnly = 0, Device78xxScannerScale = 1, Device78xxScannerScaleBCC= 2, Device7852Scanner=3};
 DeviceSim  deviceInUse = Device78xxScannerScale;
 enum SpecInUse { Scp_01 = 0, Scp_02 = 1};
@@ -173,7 +186,7 @@ struct {
   bool  bSendBcc;
 } specInUseFmtScanner [] = {
       //weight then units then status
-      { "18%s%s\x03", "130%c%c\x03", false},     // NCR 78xx without BCC appended to message
+      { "38%s%s\x03", "130%c%c\x03", false},     // NCR 78xx without BCC appended to message
       { "08%s%s\x03%2.2x", "130%c%c\x03", true}  // NCR 78xx with BCC appended to message
 };
 
@@ -190,11 +203,6 @@ struct {
 
 const char * emptyLine = "\n";
 const char * unknownResponse = "\n?\r\x03";
-
-// following define turns on the Serial debug output
-// when testing with the Arduino IDE.
-// for production this should be commented out.
-//#define USE_SERIAL
 
 // calculate the BCC or Block Check Character which is a
 // checksum on the message to send. It is added to the
@@ -227,6 +235,8 @@ char * handle78xxScannerOnly (const String &inCommand, char *cBuff)
       break;
     case 0x46:    // not on file command
       // 78xx scanner only: "\x33\x46\x03"
+      // issue the Not On File indicator tone 
+      usNotOnFileCounter = 10;
       break;
   }
   
@@ -253,6 +263,8 @@ char * handle78xxScannerScale (const String &inCommand, char *cBuff)
     case 0x35:    // not on file command
       // 78xx scanner/scale w/o BCC: "\x30\x35\x03"
       // 78xx scanner/scale w/  BCC: "\x30\x35\x03\x06"
+      // issue the Not On File indicator tone 
+      usNotOnFileCounter = 10;
       break;
     case 0x36:    // disable command
       // 78xx scanner/scale w/o BCC: "\x30\x36\x03"
@@ -351,9 +363,7 @@ void setup() {
    // background color we can just over print text and the background
    // color will overwrite what ever is there.
  
-   TFTLCD::TftColor bgColor = TFTLCD::RGB_TO_565(10,100,20);
-   
-   TFTLCD::clear(bgColor);
+   TFTLCD::clear(bgColorTop);
 
    // Font::FontTable::Flags_DoubleHigh | 
    // Font::FontTable::Flags_DoubleWide | 
@@ -363,19 +373,19 @@ void setup() {
    // Set the font color to red blue and use the same background color as for the display.
    // Our text region is the upper half of the screen.
    font1.set_fontcolor(TFTLCD::RGB_TO_565(100,0,100));
-   font1.set_txt(2, 5, TFTLCD::x_all, TFTLCD::y_all / 2, bgColor+40);
+   font1.set_txt(2, 5, TFTLCD::x_all, TFTLCD::y_all / 2, bgColorTop);
    
    //Displays a string
    font1.setFontFlags(Font::FontTable::Flags_DoubleWide | Font::FontTable::Flags_DoubleHigh);
    font1.lcd_string("Scanner Scale");
 
    font1.setFontFlags(Font::FontTable::Flags_DoubleHigh | Font::FontTable::Flags_WrapLine);
-   Font::FontPos p0 = font1.getFontPos();
+   TFTLCD::TftPos p0 = font1.getFontPos();
    font1.lcd_string ("\nScanner\n");
    //Draw the first round button1
    font2.setFontFlags(Font::FontTable::Flags_DoubleHigh);
     p0.x += 150; p0.y += 20;
-   scanButton.drawButton(p0.x, p0.y, 1, "Scan", font2);
+   scanButton.drawButton(p0, 1, "Scan", font2);
    
    font1.lcd_string(" 070177155766\n Twinings English Afternoon tea");
 
@@ -388,43 +398,66 @@ void setup() {
     weightPos = font1.getFontPos();
     font1.lcd_string(cBuff);
 
+   // UI on Bottom half of screen
    font3.set_fontcolor(TFTLCD::RGB_TO_565(100,0,100));
-   font3.set_txt(2, TFTLCD::y_all / 2, TFTLCD::x_all, TFTLCD::y_all, bgColor+60);
+   font3.set_txt(0, TFTLCD::y_all / 2, TFTLCD::x_all, TFTLCD::y_all, bgColorBottom);
 
-   p0.x = TFTLCD::x_all / 4; p0.y = TFTLCD::y_all / 2 + 10;
-   weightButton[0].drawButton (p0.x, p0.y, 1, "- 1.0", font2);
-   p0.y += 60;
-   weightButton[1].drawButton (p0.x, p0.y, 1, "+ 1.0", font2);
-   p0.x = TFTLCD::x_all / 2 ; p0.y = TFTLCD::y_all / 2 + 10;
-   weightButton[2].drawButton (p0.x, p0.y, 1, "- 0.1", font2);
-   p0.y += 60;
-   weightButton[3].drawButton (p0.x, p0.y, 1, "+ 0.1", font2);
+   p0.setPos(5, TFTLCD::y_all / 2 + 10);
+   font3.setFontPos(p0);
+   font3.lcd_string("Weight");
+   p0.setPos(100, p0.y);
+   weightButton[0].drawButton (p0, 1, "- 1.0", font2);
+   p0.movePos(100, 0);
+   weightButton[2].drawButton (p0, 1, "- 0.1", font2);
+   p0.setPos(100, p0.movePos(0, 60).y);
+   weightButton[1].drawButton (p0, 1, "+ 1.0", font2);
+   p0.movePos(100, 0);
+   weightButton[3].drawButton (p0, 1, "+ 0.1", font2);
 
-   p0.x = 100;
-   p0.y += 60;
-   font3.setFontPos(5, p0.y);
+   // status byte modification controls go down below the weight modification controls.
+   // just as for weight we have a label with the set of controls following.
+   p0.setPos(5, p0.movePos(0, 60).y);
+   font3.setFontPos(p0);
    font3.lcd_string("Status");
-   statusButton[0].drawButton (p0.x, p0.y, 1, "UC", font2);
-   p0.x += 100;
-   statusButton[1].drawButton (p0.x, p0.y, 1, "OC", font2);
-   p0.x = 100;
-   p0.y += 60;
-   statusButton[2].drawButton (p0.x, p0.y, 1, "IM", font2);
-   p0.x += 100;
-   statusButton[3].drawButton (p0.x, p0.y, 1, "SZ", font2);
+   p0.setPos(100, p0.y);
+   TFTLCD::h_line (p0.x - 20, p0.y - 10, 200, font3.get_fontcolor());
+   statusButton[0].drawButton (p0, 1, "UC", font2);
+   p0.movePos(100, 0);
+   statusButton[1].drawButton (p0, 1, "OC", font2);
+   
+   p0.setPos(100, p0.movePos(0, 60).y);
+   statusButton[2].drawButton (p0, 1, "IM", font2);
+   p0.movePos(100, 0);
+   statusButton[3].drawButton (p0, 1, "SZ", font2);
+
+   Serial.print(" sizeof(bool) ");
+   Serial.print(sizeof(bool));
+   Serial.print("  sizeof(long) ");
+   Serial.println(sizeof(long));
 }
 
 byte incoming;
 String inBuffer;
 
 void loop() {
-  
+
+    if (usNotOnFileCounter > 1) {
+        if (usNotOnFileCounter > 9) {
+          TFTLCD::FillCircle(250, 200, 40, TFTLCD::RGB_TO_565(255,0,0));
+        }
+        usNotOnFileCounter--;
+        delay(50);
+    } else if (usNotOnFileCounter > 0) {
+        usNotOnFileCounter = 0;
+        TFTLCD::FillCircle(250, 200, 40, bgColorTop);
+    }
+
     //check Touch current state detection
     TP::pen_down();
     
     if(TP::flag && TP::y_val && TP::x_val) {
        //The touch screen is touched. Check which button was pressed
-       if(scanButton.penDownFlag == 0 && scanButton.istouch(TP::x,TP::y))
+       if(scanButton.isTouchState())
         {
           handle_command("11");
           // delay(500);+
@@ -435,7 +468,7 @@ void loop() {
         }
 
         for (unsigned char i = 0; i < 4; i++) {
-            if(weightButton[i].penDownFlag == 0 && weightButton[i].istouch(TP::x,TP::y))
+            if(weightButton[i].isTouchState())
             {
                 switch (i) {
                   case 0:    // - 1.0 button
@@ -455,7 +488,7 @@ void loop() {
         }
        
         for (unsigned char i = 0; i < 4; i++) {
-            if(statusButton[i].penDownFlag == 0 && statusButton[i].istouch(TP::x,TP::y))
+            if(statusButton[i].isTouchState())
             {
                 switch (i) {
                   case 0:    // UC button for Under Capacity

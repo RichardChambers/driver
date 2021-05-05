@@ -20,10 +20,6 @@
 
 class Font {
 public:
-	struct FontPos {
-		unsigned short x;
-		unsigned short y;
-	};
 
 	struct FontTable {
 		static const unsigned char  Flags_UpperOnly = 0x01;    // bitmap font table has upper case letters only
@@ -39,17 +35,20 @@ public:
 
 	Font() { begin(); }
 	void	begin(void);
-	void	set_txt(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short txt_b_color);
+	void	set_txt(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TFTLCD::TftColor txt_b_color);
+	void	set_txt(TFTLCD::TftRect &rect, TFTLCD::TftColor txt_b_color);
 	void    clear_txt(void);
-	void 	clear_txt(unsigned short color);
+	void 	clear_txt(TFTLCD::TftColor);
 	void	lcd_char(char _data);
-	unsigned short	set_fontcolor(unsigned short f_color) { unsigned short t = font_color; font_color = f_color; return t; }
-	unsigned short	set_backcolor(unsigned short b_color) { unsigned short t = txt_backcolor; txt_backcolor = b_color; return t; }
-	FontPos getFontPos(void) { FontPos p = { now_x, now_y }; return p; }
-	FontPos setFontPos(unsigned short x0, unsigned short y0) { FontPos p = { now_x, now_y }; now_x = x0; now_y = y0; return p; }
-	FontPos setFontPos(FontPos p0) { FontPos p = { now_x, now_y }; now_x = p0.x; now_y = p0.y; return p; }
-	FontPos getTxtPosLeft(void) { FontPos p = { txt_x0, txt_y0 }; return p; }
-	FontPos getTxtPosRight(void) { FontPos p = { txt_x1, txt_y1 }; return p; }
+	TFTLCD::TftColor	set_fontcolor(TFTLCD::TftColor f_color) { TFTLCD::TftColor t = font_color; font_color = f_color; return t; }
+	TFTLCD::TftColor	set_backcolor(TFTLCD::TftColor b_color) { TFTLCD::TftColor t = txt_backcolor; txt_backcolor = b_color; return t; }
+	inline TFTLCD::TftColor	get_fontcolor(void) { return font_color; }
+	inline TFTLCD::TftColor	get_backcolor(void) { return txt_backcolor; }
+	TFTLCD::TftPos getFontPos(void) { TFTLCD::TftPos p = { now_x, now_y }; return p; }
+	TFTLCD::TftPos setFontPos(unsigned short x0, unsigned short y0) { TFTLCD::TftPos p = { now_x, now_y }; now_x = x0; now_y = y0; return p; }
+	TFTLCD::TftPos setFontPos(TFTLCD::TftPos p0) { TFTLCD::TftPos p = { now_x, now_y }; now_x = p0.x; now_y = p0.y; return p; }
+	TFTLCD::TftPos getTxtPosLeft(void) { TFTLCD::TftPos p = { txt_x0, txt_y0 }; return p; }
+	TFTLCD::TftPos getTxtPosRight(void) { TFTLCD::TftPos p = { txt_x1, txt_y1 }; return p; }
 	unsigned char setFontFlags(unsigned char xFlags) { unsigned char x = font_flags; font_flags = xFlags; return x; }
 	void	lcd_string(const char str[]);
 
@@ -80,16 +79,16 @@ private:
 
 	static FontTable font_table;      // configurable bitmap font font table to use for text.
 
-	unsigned short	font_color;       // foreground or font color in RGB565 format
-	unsigned short	txt_backcolor;    // background color in RGB565 format
-	unsigned char   font_flags;       // font specific flags to override what is in the global font_table.
+	TFTLCD::TftColor  font_color;       // foreground or font color in RGB565 format
+	TFTLCD::TftColor  txt_backcolor;    // background color in RGB565 format
+	unsigned char     font_flags;       // font specific flags to override what is in the global font_table.
 
-	unsigned short	txt_x0;           // top left row coordinate for text area
-	unsigned short	txt_y0;           // top left column coordinate for text area
-	unsigned short	txt_x1;           // bottom right row coordinate for text area
-	unsigned short	txt_y1;           // bottom right column coordinate for text area
-	unsigned short	now_x;            // top left row coordinate for next character
-	unsigned short	now_y;            // top left column coordinate for next character
+	unsigned short	  txt_x0;           // top left row coordinate for text area
+	unsigned short	  txt_y0;           // top left column coordinate for text area
+	unsigned short	  txt_x1;           // bottom right row coordinate for text area
+	unsigned short	  txt_y1;           // bottom right column coordinate for text area
+	unsigned short	  now_x;            // top left row coordinate for next character
+	unsigned short	  now_y;            // top left column coordinate for next character
 };
 
 #endif

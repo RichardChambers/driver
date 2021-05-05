@@ -304,7 +304,7 @@ void Font::begin(void)
  *Author   £ºKeDei
  *Time   £º2015/4/21
  ****************************************/
-void Font::set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1,unsigned short txt_b_color)
+void Font::set_txt(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TFTLCD::TftColor txt_b_color)
 {
 	Font::txt_x0			= x0;
 	Font::txt_y0			= y0;
@@ -314,6 +314,11 @@ void Font::set_txt(unsigned short x0,unsigned short y0,unsigned short x1,unsigne
 	Font::now_y			= y0;
 	Font::txt_backcolor	= txt_b_color;
 	TFTLCD::draw_area(x0, y0, x1, y1, txt_b_color);
+}
+
+void Font::set_txt(TFTLCD::TftRect &rect, TFTLCD::TftColor txt_b_color)
+{
+	set_txt(rect.xLeft, rect.yLeft, rect.xRight, rect.yRight, txt_b_color);
 }
 
 /*
@@ -353,7 +358,7 @@ void Font::clear_txt(void)
 {
 	clear_txt(Font::txt_backcolor);
 }
-void Font::clear_txt(unsigned short backColor)
+void Font::clear_txt(TFTLCD::TftColor backColor)
 {
 	TFTLCD::draw_area(Font::txt_x0, Font::txt_y0, Font::txt_x1, Font::txt_y1, backColor);
 }

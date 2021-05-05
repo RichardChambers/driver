@@ -4,6 +4,8 @@ Please visit kedei.taobao.com
 qq310953417
 vision 1.1 2015/4/21
 */
+
+
 #include	"KeDei_button.h"
 #include    "string.h"
 
@@ -68,27 +70,38 @@ The text content of the button is * str;
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder, const char *str, Font & myFont)
+bool ButtonShared::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder, const char *str, Font & myFont)
 {
 //	the  botton moder 0--cube_button  1--circle_button
 	x				= _x;
 	y				= _y;
-	botton_moder	= _botton_moder;
-	if(_botton_moder)
-	{
-		TFTLCD::draw_buttom(x, y, x + x_size, y + y_size, 10, button_color);
-		TFTLCD::draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_up_color);
-	}
-	else
-	{
-		TFTLCD::draw_area(x, y, x + x_size, y + y_size, button_color);
-		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
-	}
+	if (myData == nullptr) {
+		return false;
+	} else {
+		myData->botton_moder	= _botton_moder;
+		if(_botton_moder)
+		{
+			TFTLCD::draw_buttom(x, y, x + myData->x_size, y + myData->y_size, 10, myData->button_color);
+			TFTLCD::draw_buttom_edge(x, y, x + myData->x_size, y + myData->y_size, 10, myData->edge_up_color);
+		}
+		else
+		{
+			TFTLCD::draw_area(x, y, x + myData->x_size, y + myData->y_size, myData->button_color);
+			TFTLCD::draw_edge(x, y, x + myData->x_size, y + myData->y_size, 2, myData->edge_up_color);
+		}
 
-	myFont.set_txt(x + x_size / 2 - myFont.size_width(str) / 2, y + y_size / 2 - myFont.size_height() / 2, x + x_size - 2, y + y_size - 2, button_color);
+		myFont.set_txt(x + myData->x_size / 2 - myFont.size_width(str) / 2, y + myData->y_size / 2 - myFont.size_height() / 2, x + myData->x_size - 2, y + myData->y_size - 2, myData->button_color);
 
-	myFont.set_fontcolor(font_color);
-	myFont.lcd_string(str);
+		myFont.set_fontcolor(myData->font_color);
+		myFont.lcd_string(str);
+
+		return true;   // always return true to allow use in logical expressions
+	}
+}
+
+bool ButtonShared::drawButton(TFTLCD::TftPos &p, bool _botton_moder, const char *str, Font & myFont)
+{
+	return drawButton(p.x, p.y, _botton_moder, str, myFont);
 }
 
 /*****************************************
@@ -99,9 +112,19 @@ void Button::drawButton(unsigned short _x, unsigned short _y, bool _botton_moder
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-bool Button::istouch(unsigned short _x, unsigned short _y)
+bool ButtonShared::istouch(unsigned short _x, unsigned short _y)
 {
-	return TFTLCD::touch_area(x, y, x + x_size, y + y_size, _x, _y) && pendown();
+	return (myData != nullptr) && TFTLCD::touch_area(x, y, x + myData->x_size, y + myData->y_size, _x, _y) && pendown();
+}
+
+bool ButtonShared::istouch(void)
+{
+	return istouch(TP::x, TP::y);
+}
+
+bool ButtonShared::isTouchState(void)
+{
+	return (penDownFlag == 0 && istouch(TP::x, TP::y));
 }
 
 /*****************************************
@@ -112,19 +135,24 @@ bool Button::istouch(unsigned short _x, unsigned short _y)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-bool Button::pendown(void)
+bool ButtonShared::pendown()
 {
-	penDownFlag = 1;     // indicate pen down state which is cleared when penup() is called.
-	if(botton_moder)
-	{
-		TFTLCD::draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_down_color);
+	if (myData == nullptr) {
+		return false;
 	}
-	else
-	{
-		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_down_color);
-	}
+	else {
+		penDownFlag = 1;
+		if(myData->botton_moder)
+		{
+			TFTLCD::draw_buttom_edge(x, y, x + myData->x_size, y + myData->y_size, 10, myData->edge_down_color);
+		}
+		else
+		{
+			TFTLCD::draw_edge(x, y, x + myData->x_size, y + myData->y_size, 2, myData->edge_down_color);
+		}
 
-	return true;   // always return true to allow use in logical expressions
+		return true;   // always return true to allow use in logical expressions
+	}
 }
 
 /*****************************************
@@ -135,19 +163,24 @@ bool Button::pendown(void)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-bool Button::penup(void)
+bool ButtonShared::penup()
 {
-	penDownFlag = 0;     // indicate pen down state is cleared by a penup(). pen down state is set by pindown().
-	if(botton_moder)
-	{
-		TFTLCD::draw_buttom_edge(x, y, x + x_size, y + y_size, 10, edge_up_color);
+	if (myData == nullptr) {
+		return false;
 	}
-	else
-	{
-		TFTLCD::draw_edge(x, y, x + x_size, y + y_size, 2, edge_up_color);
-	}
+	else {
+		penDownFlag = 0;
+		if (myData->botton_moder)
+		{
+			TFTLCD::draw_buttom_edge(x, y, x + myData->x_size, y + myData->y_size, 10, myData->edge_up_color);
+		}
+		else
+		{
+			TFTLCD::draw_edge(x, y, x + myData->x_size, y + myData->y_size, 2, myData->edge_up_color);
+		}
 
-	return true;   // always return true to allow use in logical expressions
+		return true;   // always return true to allow use in logical expressions
+	}
 }
 
 /*if you want  to change the button size or the color,you can use  the  follow function to achieve your purpose,
@@ -160,10 +193,12 @@ but you  must do it before use the Button() function*/
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::resetsize(unsigned char _x_size, unsigned char _y_size)
+void ButtonShared::resetsize(unsigned char _x_size, unsigned char _y_size)
 {
-	x_size = _x_size;
-	y_size = _y_size;
+	if (myData != nullptr) {
+		myData->x_size = _x_size;
+		myData->y_size = _y_size;
+	}
 }
 
 /*****************************************
@@ -174,11 +209,13 @@ void Button::resetsize(unsigned char _x_size, unsigned char _y_size)
  *Author   £º KeDei
  *Time   £º 2015/4/21
  ****************************************/
-void Button::resetcolor(TFTLCD::TftColor _edge_up_color, TFTLCD::TftColor _edge_down_color, TFTLCD::TftColor _button_color, TFTLCD::TftColor _font_color)
+void ButtonShared::resetcolor(TFTLCD::TftColor _edge_up_color, TFTLCD::TftColor _edge_down_color, TFTLCD::TftColor _button_color, TFTLCD::TftColor _font_color)
 {
-	edge_up_color		= _edge_up_color;
-	edge_down_color		= _edge_down_color;
-	button_color		= _button_color;
-	font_color			= _font_color;
+	if (myData != nullptr) {
+		myData->edge_up_color		= _edge_up_color;
+		myData->edge_down_color		= _edge_down_color;
+		myData->button_color		= _button_color;
+		myData->font_color			= _font_color;
+	}
 }
 

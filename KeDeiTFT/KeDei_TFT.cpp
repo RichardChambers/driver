@@ -615,7 +615,7 @@ void TFTLCD::tft_init()
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
+static bool TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1)
 {
 	//  define rectangular area of frame memory where MCU can access
 	//  specify the range of columns and the range of rows for the area
@@ -646,6 +646,12 @@ static void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned shor
 	//    	w_data(color >> 8);   // write most significant 8 bits of RGB565 color value
 	//    	w_data(color);        // write least significant 8 bits of RGB565 color value
 
+	return 1;
+}
+
+static bool TFTLCD::set_area(TftRect &rect)
+{
+	return set_area(rect.xLeft, rect.yLeft, rect.xRight, rect.yRight);
 }
 
 /*****************************************
@@ -657,7 +663,7 @@ static void TFTLCD::set_area(unsigned short x0, unsigned short y0, unsigned shor
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+static bool TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
 	if((y + len) > TFTLCD::y_all) len = TFTLCD::y_all - y - 1;
 	set_area(x, y, x, y + len);
@@ -667,6 +673,12 @@ static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short le
 		w_data(color >> 8);
 		w_data(color);
 	}
+	return 1;
+}
+
+static bool TFTLCD::v_line(TFTLCD::TftPos &p, unsigned short len, TftColor color)
+{
+	return v_line(p.x, p.y, len, color);
 }
 
 /*****************************************
@@ -678,7 +690,7 @@ static void TFTLCD::v_line(unsigned short x, unsigned short y, unsigned short le
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
+static bool TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short len, TftColor color)
 {
 	if((x + len) > TFTLCD::x_all) len = TFTLCD::x_all - x - 1;
 	set_area(x, y, x + len, y);
@@ -688,6 +700,12 @@ static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short le
 		w_data(color>>8);
 		w_data(color);
 	}
+	return 1;
+}
+
+static bool TFTLCD::h_line(TFTLCD::TftPos &p, unsigned short len, TftColor color)
+{
+	return h_line(p.x, p.y, len, color);
 }
 
 /*****************************************
@@ -699,7 +717,7 @@ static void TFTLCD::h_line(unsigned short x, unsigned short y, unsigned short le
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
+static bool TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, TftColor color)
 {
 	if (x1 >= TFTLCD::x_all) x1 = TFTLCD::x_all - 1;
 	if (y1 >= TFTLCD::y_all) y1 = TFTLCD::y_all - 1;
@@ -714,6 +732,12 @@ static void TFTLCD::draw_area(unsigned short x0, unsigned short y0, unsigned sho
 			w_data(color>>8);
 			w_data(color);
 		}
+	return 1;
+}
+
+static bool TFTLCD::draw_area(TFTLCD::TftRect &rect, TftColor color)
+{
+	return draw_area(rect.xLeft, rect.yLeft, rect.xRight, rect.yRight, color);
 }
 
 static bool TFTLCD::touch_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short px, unsigned short py)
@@ -721,7 +745,12 @@ static bool TFTLCD::touch_area(unsigned short x0, unsigned short y0, unsigned sh
 	return (x0 <= px && px < x1 && y0 <= py && py < y1);
 }
 
-static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
+static bool TFTLCD::touch_area(TFTLCD::TftRect &rect, TFTLCD::TftPos &p)
+{
+	return touch_area(rect.xLeft, rect.yLeft, rect.xRight, rect.yRight, p.x, p.y);
+}
+
+static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
 {
 	// we will fill a single row of 8 pixels by iterating over
 	// a bitmap font map of which pixels to set to the foreground
@@ -757,6 +786,13 @@ static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 			}
 		}
 	}
+
+	return 1;
+}
+
+static bool TFTLCD::draw_glyph(TFTLCD::TftPos &p, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
+{
+	return draw_glyph(p.x, p.y, fg_color, bg_color, bitMap, flags);
 }
 
 /*****************************************
@@ -768,12 +804,14 @@ static void TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color)
+static bool TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color)
 {
 	draw_area(x0, y0, x1, y0 + size, color);
 	draw_area(x0, y1 - size, x1, y1, color);
 	draw_area(x0, y0, x0 + size, y1, color);
 	draw_area(x1 - size, y0, x1, y1, color);
+
+	return 1;
 }
 
 /*****************************************
@@ -784,11 +822,17 @@ static void TFTLCD::draw_edge(unsigned short x0, unsigned short y0, unsigned sho
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
+static bool   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor color)
 {
 	set_area(x,y,x,y);
 	w_data(color>>8);
 	w_data(color);
+	return 1;
+}
+
+static bool   TFTLCD::set_pixl(TFTLCD::TftPos &p, TftColor color)
+{
+	return set_pixl(p.x, p.y, color);
 }
 
 /*****************************************
@@ -800,7 +844,7 @@ static void   TFTLCD::set_pixl(unsigned short x, unsigned short y, TftColor colo
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
+static bool TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
@@ -824,7 +868,7 @@ static void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned s
 		}
 		draw_area(x0,y0+circular_size,x1,y1-circular_size,color);
 	}
-
+	return 1;
 }
 
 /*****************************************
@@ -836,7 +880,7 @@ static void TFTLCD::draw_buttom(unsigned short x0, unsigned short y0, unsigned s
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
+static bool TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short circular_size, TftColor color)
 {
 	if(circular_size)
 	{	
@@ -867,6 +911,7 @@ static void TFTLCD::draw_buttom_edge(unsigned short x0, unsigned short y0, unsig
 		draw_area(x0,y0+circular_size,x0,y1-circular_size,color);
 		draw_area(x1,y0+circular_size,x1,y1-circular_size,color);
 	}
+	return 1;
 }
 
 /*****************************************
@@ -910,7 +955,7 @@ static void   TFTLCD::R565_TO_RGB(TftColor color, unsigned char rgb[3])
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
+static bool TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
 {
 	int x0 = 0;
 	int d = 1 - R;                  
@@ -933,6 +978,7 @@ static void TFTLCD::draw_circle(unsigned short x, unsigned short y, unsigned sho
 		}
 		x0++;                                         
 	}
+	return 1;
 }
 
 static bool TFTLCD::touch_circle(unsigned short x, unsigned short y, unsigned short R, unsigned short px, unsigned short py)
@@ -950,7 +996,7 @@ static bool TFTLCD::touch_circle(unsigned short x, unsigned short y, unsigned sh
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short OR, unsigned short IR, TftColor color)
+static bool TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short OR, unsigned short IR, TftColor color)
 {
 	for(unsigned short y0 = 0; y0 < OR; y0++)
 	{
@@ -966,6 +1012,7 @@ static void TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short
 			}	
 		}
 	}
+	return 1;
 }
 
 /*****************************************
@@ -976,7 +1023,7 @@ static void TFTLCD::draw_ring(unsigned short x, unsigned short y, unsigned short
  *作 者  ： KeDei
  *时 间  ： 2015/4/21
  ****************************************/
-static void TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
+static bool TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned short R, TftColor color)
 {	int x0 = 0;
 	int d = 1 - R;                  
 	for(int y0 = R; y0 >= x0; )
@@ -995,10 +1042,11 @@ static void TFTLCD::FillCircle(unsigned short x, unsigned short y, unsigned shor
 		}
 		x0++;                                         
 	}
+	return 1;
 }
 
 
-static void TFTLCD::draw_pixl(unsigned short x, unsigned short y, unsigned short size, TftColor color)
+static bool TFTLCD::draw_pixl(unsigned short x, unsigned short y, unsigned short size, TftColor color)
 {
 	set_area(x, y, x + size, y + size);
 	for(unsigned short i = size + 1; i > 0; i--)
@@ -1007,6 +1055,12 @@ static void TFTLCD::draw_pixl(unsigned short x, unsigned short y, unsigned short
 			w_data(color>>8);
 			w_data(color);
 		}
+	return 1;
+}
+
+static bool TFTLCD::draw_pixl(TFTLCD::TftPos &p, unsigned short size, TftColor color)
+{
+	return draw_pixl(p.x, p.y, size, color);
 }
 
 static void   TFTLCD::draw_sin(int x, int y, float A, float w, float r, TftColor color)
