@@ -761,6 +761,8 @@ static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 
 	if (flags & 0x01)
 		set_area(x0, y0, x0 + 15, y0);
+	else if (flags & 0x02)
+		set_area(x0, y0, x0 + 23, y0);
 	else
 		set_area(x0, y0, x0 + 7, y0);
 	for (unsigned char char_n = 1; char_n; char_n <<= 1)
@@ -774,7 +776,18 @@ static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 			w_data(bg_color >> 8);
 			w_data(bg_color);
 		}
-		if (flags & 0x01) {
+		if (flags & 0x03) {         // double wide or triple wide
+			if (bitMap & char_n)
+			{
+				w_data(fg_color >> 8);
+				w_data(fg_color);
+			}
+			else {
+				w_data(bg_color >> 8);
+				w_data(bg_color);
+			}
+		}
+		if (flags & 0x02) {          // triple wide
 			if (bitMap & char_n)
 			{
 				w_data(fg_color >> 8);

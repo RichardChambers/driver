@@ -25,7 +25,10 @@ public:
 		static const unsigned char  Flags_UpperOnly = 0x01;    // bitmap font table has upper case letters only
 		static const unsigned char  Flags_DoubleHigh = 0x02;   // display the character as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
 		static const unsigned char  Flags_DoubleWide = 0x04;   // display the character as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
-		static const unsigned char  Flags_WrapLine = 0x08;     // wrap text to next line
+		static const unsigned char  Flags_TripleHigh = 0x08;   // display the character as three as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+		static const unsigned char  Flags_TripleWide = 0x10;   // display the character as three as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+		static const unsigned char  Flags_NoLineFeed = 0x40;   // no line feed added to end of a text string automatically.
+		static const unsigned char  Flags_WrapLine = 0x80;     // wrap text to next line
 		unsigned char bFlags;    // above flags to indicate special handling.
 		unsigned char nRows;     // number of rows in the bitmap font table of character bitmaps
 		unsigned char nCols;     // number of columns in the bitmap font table of character bitmaps. also font height or width in pixels.

@@ -385,7 +385,8 @@ void Font::lcd_char(char _data)
 	case '\n':
 		// new line means go to beginning of next line.
 		Font::now_y += Font::font_table.nCols + Font::font_leading;
-		if (Font::font_flags & FontTable::Flags_DoubleHigh) Font::now_y += Font::font_table.nCols;
+		if (Font::font_flags & (FontTable::Flags_DoubleHigh | FontTable::Flags_TripleHigh)) Font::now_y += Font::font_table.nCols;
+		if (Font::font_flags & FontTable::Flags_TripleHigh) Font::now_y += Font::font_table.nCols;
 		Font::now_x = Font::txt_x0;
 		return;
 	case '\r':
@@ -405,12 +406,13 @@ void Font::lcd_char(char _data)
 			// next line.
 			Font::now_x = Font::txt_x0;
 			Font::now_y += Font::font_table.nCols + Font::font_leading;
-			if (Font::font_flags & FontTable::Flags_DoubleHigh) Font::now_y += Font::font_table.nCols;
+			if (Font::font_flags & (FontTable::Flags_DoubleHigh | FontTable::Flags_TripleHigh)) Font::now_y += Font::font_table.nCols;
+			if (Font::font_flags & FontTable::Flags_TripleHigh) Font::now_y += Font::font_table.nCols;
 		}
 		else
 			return;
 	}
-	if(Font::now_y > Font::txt_y1 - (Font::font_table.nCols + (Font::font_flags & FontTable::Flags_DoubleHigh) ? Font::font_table.nCols : 0))
+	if(Font::now_y > Font::txt_y1 - (Font::font_table.nCols + (Font::font_flags & (FontTable::Flags_DoubleWide | FontTable::Flags_TripleWide)) ? Font::font_table.nCols : 0))
 	{
 		// if we are at the below the text region then reset our position
 		// back to the top of the region. Wrap around to top in other words.
@@ -436,13 +438,20 @@ void Font::lcd_char(char _data)
 
 	unsigned short now_y_save = Font::now_y;
 
+	unsigned char glyphFlags = ((Font::font_flags & FontTable::Flags_DoubleWide) ? 1 : 0) | ((Font::font_flags & FontTable::Flags_TripleWide) ? 2 : 0);
+
 	for(unsigned char char_m = 0; char_m < Font::font_table.nCols ; char_m++)
 	{
-		TFTLCD::draw_glyph(Font::now_x, Font::now_y, Font::font_color, Font::txt_backcolor, Font::font_table.table[char_i_x + char_m], ((Font::font_flags & FontTable::Flags_DoubleWide) ? 1 : 0));
+		TFTLCD::draw_glyph(Font::now_x, Font::now_y, Font::font_color, Font::txt_backcolor, Font::font_table.table[char_i_x + char_m], glyphFlags);
 		// shift down to the next row of pixels for the character
 		Font::now_y++;
-		 if (font_flags & FontTable::Flags_DoubleHigh) {
-			 TFTLCD::draw_glyph(Font::now_x, Font::now_y, Font::font_color, Font::txt_backcolor, Font::font_table.table[char_i_x + char_m], ((Font::font_flags & FontTable::Flags_DoubleWide) ? 1 : 0));
+		 if (font_flags & (FontTable::Flags_DoubleHigh | FontTable::Flags_TripleHigh)) {
+			 TFTLCD::draw_glyph(Font::now_x, Font::now_y, Font::font_color, Font::txt_backcolor, Font::font_table.table[char_i_x + char_m], glyphFlags);
+			 // shift down to the next row of pixels for the character
+			 Font::now_y++;
+		 }
+		 if (font_flags & FontTable::Flags_TripleHigh) {
+			 TFTLCD::draw_glyph(Font::now_x, Font::now_y, Font::font_color, Font::txt_backcolor, Font::font_table.table[char_i_x + char_m], glyphFlags);
 			 // shift down to the next row of pixels for the character
 			 Font::now_y++;
 		 }
@@ -450,7 +459,7 @@ void Font::lcd_char(char _data)
 	// reposition the cursor to the pixel position for the top left
 	// of this character we've just displayed.
 	Font::now_y = now_y_save;
-	Font::now_x += Font::font_table.nCols + ((Font::font_flags & FontTable::Flags_DoubleWide) ? Font::font_table.nCols :  0) + Font::font_interval;
+	Font::now_x += Font::font_table.nCols + ((Font::font_flags & (FontTable::Flags_DoubleWide | FontTable::Flags_TripleWide)) ? Font::font_table.nCols :  0) + ((Font::font_flags & FontTable::Flags_TripleWide) ? Font::font_table.nCols : 0) + Font::font_interval;
 }
 
 /*****************************************
@@ -469,5 +478,5 @@ void Font::lcd_string(const char str[])
   }
   // default action for writing a string is to position
   // the cursor at the beginning of the next line of text.
-  lcd_char('\n');
+  if ((Font::font_flags & FontTable::Flags_NoLineFeed) == 0) lcd_char('\n');
 }
