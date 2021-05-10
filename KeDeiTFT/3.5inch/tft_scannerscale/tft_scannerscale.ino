@@ -227,6 +227,8 @@ char * handle78xxScannerOnly (const String &inCommand, char *cBuff)
     case 0x30:    // enable command
       // 78xx scanner only: "\x32\x30\x03"
       break;
+    case 0x36:    // status command
+      // 78xx scanner only: "\x30\x36\x03"
     case 0x33:    // status command
       // 78xx scanner only: "\x30\x33\x03"
       break;
@@ -242,8 +244,8 @@ char * handle78xxScannerOnly (const String &inCommand, char *cBuff)
   
   if (deviceInUse == Device78xxScannerOnly)
     sprintf (cBuff, specInUseFmtScanner[0].specStatus, s1, s2);
-  else
-    sprintf (cBuff, emptyLine);
+//  else
+//    sprintf (cBuff, emptyLine);
     
   return cBuff;
 }
@@ -274,14 +276,16 @@ char * handle78xxScannerScale (const String &inCommand, char *cBuff)
   
   if (deviceInUse == Device78xxScannerScale)
     sprintf (cBuff, specInUseFmtScanner[0].specStatus, s1, s2);
-  else
-    sprintf (cBuff, emptyLine);
+//  else
+//    sprintf (cBuff, emptyLine);
     
   return cBuff;
 }
 
 void handle_command(const String &inCommand) {
-
+  
+    cBuff[0] = 0;
+    
 #if defined(USE_SERIAL)
     Serial.println(inCommand);
 #endif
@@ -309,7 +313,7 @@ void handle_command(const String &inCommand) {
 #if defined(USE_SERIAL)
         Serial.println("0x33 command");
 #endif
-       handle78xxScannerOnly (inCommand, cBuff);
+        handle78xxScannerOnly (inCommand, cBuff);
         break;
         
       case 0x46:    // status command
@@ -376,15 +380,16 @@ void setup() {
    font1.set_txt(2, 5, TFTLCD::x_all, TFTLCD::y_all / 2, bgColorTop);
    
    //Displays a string
-   font1.setFontFlags(Font::FontTable::Flags_DoubleWide | Font::FontTable::Flags_DoubleHigh);
+   font1.setFontFlags(Font::FontTable::Flags_DoubleWide | Font::FontTable::Flags_DoubleHigh | Font::FontTable::Flags_NoLineFeed);
    font1.lcd_string("Scanner Scale");
 
    font1.setFontFlags(Font::FontTable::Flags_DoubleHigh | Font::FontTable::Flags_WrapLine);
+   font1.lcd_string ("\n");
    TFTLCD::TftPos p0 = font1.getFontPos();
-   font1.lcd_string ("\nScanner\n");
+   font1.lcd_string ("Scanner\n");
    //Draw the first round button1
    font2.setFontFlags(Font::FontTable::Flags_DoubleHigh);
-    p0.x += 150; p0.y += 20;
+    p0.x += 150;
    scanButton.drawButton(p0, 1, "Scan", font2);
    
    font1.lcd_string(" 070177155766\n Twinings English Afternoon tea");
@@ -429,11 +434,6 @@ void setup() {
    statusButton[2].drawButton (p0, 1, "IM", font2);
    p0.movePos(100, 0);
    statusButton[3].drawButton (p0, 1, "SZ", font2);
-
-   Serial.print(" sizeof(bool) ");
-   Serial.print(sizeof(bool));
-   Serial.print("  sizeof(long) ");
-   Serial.println(sizeof(long));
 }
 
 byte incoming;

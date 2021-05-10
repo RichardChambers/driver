@@ -26,7 +26,7 @@ void setup() {
    //  - pic1_16.bmp a 320x480 bitmap of depth 4
    //  - pic1_256.bmp a 320x480 bitmap of depth 8
    //
-   bmpFile = SD.open("pic1_1.bmp");
+   bmpFile = SD.open("pic1.bmp");
    if (! bmpFile) {
     Serial.println("didnt find image");
     while (1);

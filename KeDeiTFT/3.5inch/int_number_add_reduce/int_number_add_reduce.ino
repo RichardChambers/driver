@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-static const TFTLCD::TftColor backcolor = TFTLCD::RGB_TO_565(255,100,100);
+static const unsigned short backcolor = TFTLCD::RGB_TO_565(255,100,100);
 
 //Font class object is font
 Font  font;
@@ -34,19 +34,24 @@ void setup() {
    
    //Set the text font color
    font.set_fontcolor(TFTLCD::RGB_TO_565(0,0,255));
+   font.setFontFlags(Font::FontTable::Flags_DoubleWide | Font::FontTable::Flags_DoubleHigh);
    //Displays the title and instructions
    font.lcd_string("KeDeiTFT");
+   font.setFontFlags(Font::FontTable::Flags_DoubleHigh);
    font.lcd_string("show int number add and reduce");
    
-   //Draw the first round button1
+   //Draw the first button1 with rounded corners
+   font2.setFontFlags(Font::FontTable::Flags_DoubleHigh | Font::FontTable::Flags_DoubleWide);
    Button1.drawButton(100,100,1,"-",font2);
-   //Draw the second round button
+   //Draw the second button with square corners
    Button2.drawButton(100,250,0,"+",font2);
 
-   font.set_txt(100,180,140,197,backcolor);
+   font.set_txt(100,180,180,197,backcolor);
    font.set_fontcolor(TFTLCD::RGB_TO_565(0,0,255));
-   font.mod_fonttable(Font::FontTable::Flags_DoubleHigh);
+   font.setFontFlags(Font::FontTable::Flags_DoubleHigh | Font::FontTable::Flags_DoubleWide);
    lcd_display_int(value,font);
+
+   TFTLCD::draw_circle (50, 250, 50, TFTLCD::RGB_TO_565(100,100,100));
 }
 
 void loop() {
@@ -73,6 +78,12 @@ void loop() {
 
       if(Button2.isTouchState())
       {
+           //value increase by 9
+           value += 9;
+           lcd_display_int(value,font);
+      }
+
+      if (TFTLCD::touch_circle(50, 250, 50, TP::x, TP::y)) {
            //value increase by 9
            value += 9;
            lcd_display_int(value,font);
