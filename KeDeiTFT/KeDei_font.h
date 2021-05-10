@@ -16,20 +16,27 @@
 
 //#define USE_FONT_NONE
 #define SMALLER_FONT_TABLE
-#define USE_FONT_8_B
+#define USE_FONT_5_B
+//#define USE_FONT_6_B
+//#define USE_FONT_7_B
+//#define USE_FONT_8_B
+//#define USE_FONT_13_B
+//#define USE_FONT_16_B
 
 class Font {
 public:
 
 	struct FontTable {
-		static const unsigned char  Flags_UpperOnly = 0x01;    // bitmap font table has upper case letters only
-		static const unsigned char  Flags_DoubleHigh = 0x02;   // display the character as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
-		static const unsigned char  Flags_DoubleWide = 0x04;   // display the character as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
-		static const unsigned char  Flags_TripleHigh = 0x08;   // display the character as three as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
-		static const unsigned char  Flags_TripleWide = 0x10;   // display the character as three as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
-		static const unsigned char  Flags_NoLineFeed = 0x40;   // no line feed added to end of a text string automatically.
-		static const unsigned char  Flags_WrapLine = 0x80;     // wrap text to next line
-		unsigned char bFlags;    // above flags to indicate special handling.
+		static const unsigned short  Flags_DoubleHigh = 0x001;   // display the character as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+		static const unsigned short  Flags_DoubleWide = 0x002;   // display the character as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+		static const unsigned short  Flags_TripleHigh = 0x004;   // display the character as three as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
+		static const unsigned short  Flags_TripleWide = 0x008;   // display the character as three as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+		static const unsigned short  Flags_UpperOnly  = 0x010;    // bitmap font table has upper case letters only
+		static const unsigned short  Flags_InvertBitOrder = 0x020; // the bitmap table entries for each character are in reverse order
+		static const unsigned short  Flags_RotateBits = 0x040;     // the bitmap table entries need to be rotated 90 degrees left to display properly
+		static const unsigned short  Flags_NoLineFeed = 0x080;     // no line feed added to end of a text string automatically.
+		static const unsigned short  Flags_WrapLine = 0x100;       // wrap text to next line
+		unsigned short bFlags;    // above flags to indicate special handling.
 		unsigned char nRows;     // number of rows in the bitmap font table of character bitmaps
 		unsigned char nCols;     // number of columns in the bitmap font table of character bitmaps. also font height or width in pixels.
 		unsigned char *table;    // pointer to a bitmap font table of character bitmaps, static const unsigned char font_table[nRows][nCols];
@@ -52,7 +59,7 @@ public:
 	TFTLCD::TftPos setFontPos(TFTLCD::TftPos p0) { TFTLCD::TftPos p = { now_x, now_y }; now_x = p0.x; now_y = p0.y; return p; }
 	TFTLCD::TftPos getTxtPosLeft(void) { TFTLCD::TftPos p = { txt_x0, txt_y0 }; return p; }
 	TFTLCD::TftPos getTxtPosRight(void) { TFTLCD::TftPos p = { txt_x1, txt_y1 }; return p; }
-	unsigned char setFontFlags(unsigned char xFlags) { unsigned char x = font_flags; font_flags = xFlags; return x; }
+	unsigned char setFontFlags(unsigned char xFlags) { unsigned char x = font_flags; font_flags = xFlags | (font_table.bFlags & (Font::FontTable::Flags_UpperOnly | Font::FontTable::Flags_InvertBitOrder | Font::FontTable::Flags_RotateBits)); return x; }
 	void	lcd_string(const char str[]);
 
 	unsigned short size_width(char *s1);
@@ -60,16 +67,42 @@ public:
 
 	static void set_fonttable(unsigned short nRows, unsigned short nCols, unsigned char *pTable, unsigned char flags);
 	static unsigned char  Font::mod_fonttable(unsigned char flags = 0);
+	static FontTable font_table;      // configurable bitmap font font table to use for text.
+
 
 private:
 #if !defined(USE_FONT_NONE)
-#if defined(USE_FONT_8_B)
+#if defined(USE_FONT_5_B)
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][5];
+#else
+	static const unsigned char Font::font_table_local[96][5];
+#endif
+#elif defined(USE_FONT_6_B)
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][6];
+#else
+	static const unsigned char Font::font_table_local[96][6];
+#endif
+#elif defined(USE_FONT_7_B)
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][7];
+#else
+	static const unsigned char Font::font_table_local[96][7];
+#endif
+#elif defined(USE_FONT_8_B)
 #if defined(SMALLER_FONT_TABLE)
 	static const unsigned char Font::font_table_local[59][8];
 #else
 	static const unsigned char Font::font_table_local[96][8];
 #endif
+#elif defined(USE_FONT_13_B)
+#if defined(SMALLER_FONT_TABLE)
+	static const unsigned char Font::font_table_local[59][13];
 #else
+	static const unsigned char Font::font_table_local[95][13];
+#endif
+#elif defined(USE_FONT_16_B)
 #if defined(SMALLER_FONT_TABLE)
 	static const unsigned char Font::font_table_local[59][16]; 
 #else
@@ -79,8 +112,6 @@ private:
 #endif
 	static const unsigned short  font_leading = 6;     // interval between rows in pixels.
 	static const unsigned short	 font_interval = 2;    // interval between characters in pixels. kerning.
-
-	static FontTable font_table;      // configurable bitmap font font table to use for text.
 
 	TFTLCD::TftColor  font_color;       // foreground or font color in RGB565 format
 	TFTLCD::TftColor  txt_backcolor;    // background color in RGB565 format

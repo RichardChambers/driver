@@ -750,33 +750,28 @@ static bool TFTLCD::touch_area(TFTLCD::TftRect &rect, TFTLCD::TftPos &p)
 	return touch_area(rect.xLeft, rect.yLeft, rect.xRight, rect.yRight, p.x, p.y);
 }
 
-static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
+static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char bmWidth, unsigned char flags)
 {
 	// we will fill a single row of 8 pixels by iterating over
 	// a bitmap font map of which pixels to set to the foreground
 	// color and which pixels to set to the background color for this
 	// part of the character to display.
-	// we will iterate over least significant bit through the most
-	// significant bit using a left shift.
 
+	// first determine whether we are scaling the default width by a multiplier
+	// of 2 or 3 times the default size. this allows us to have different sizes
+	// of text using the same bitmap font.
 	if (flags & 0x01)
-		set_area(x0, y0, x0 + 15, y0);
+		set_area(x0, y0, x0 + bmWidth * 2 - 1, y0); // scale the default width to double wide
 	else if (flags & 0x02)
-		set_area(x0, y0, x0 + 23, y0);
+		set_area(x0, y0, x0 + bmWidth * 3 - 1, y0); // scale the default width to tripple wide
 	else
-		set_area(x0, y0, x0 + 7, y0);
-	for (unsigned char char_n = 1; char_n; char_n <<= 1)
-	{
-		if (bitMap & char_n)
+		set_area(x0, y0, x0 + bmWidth - 1, y0);    // default width and size with no scaling
+
+	if (flags & 0x20) {    // Font::font_flags & FontTable::Flags_InvertBitOrder
+		// inverting the order of painting the bits. means the bitmap of the
+		// font would display the text with each character flipped if we did not do this.
+		for (unsigned char char_n = 0x80; char_n; char_n >>= 1)
 		{
-			w_data(fg_color >> 8);
-			w_data(fg_color);
-		}
-		else {
-			w_data(bg_color >> 8);
-			w_data(bg_color);
-		}
-		if (flags & 0x03) {         // double wide or triple wide
 			if (bitMap & char_n)
 			{
 				w_data(fg_color >> 8);
@@ -786,8 +781,33 @@ static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 				w_data(bg_color >> 8);
 				w_data(bg_color);
 			}
+			if (flags & 0x03) {         // double wide or triple wide
+				if (bitMap & char_n)
+				{
+					w_data(fg_color >> 8);
+					w_data(fg_color);
+				}
+				else {
+					w_data(bg_color >> 8);
+					w_data(bg_color);
+				}
+				if (flags & 0x02) {          // triple wide
+					if (bitMap & char_n)
+					{
+						w_data(fg_color >> 8);
+						w_data(fg_color);
+					}
+					else {
+						w_data(bg_color >> 8);
+						w_data(bg_color);
+					}
+				}
+			}
 		}
-		if (flags & 0x02) {          // triple wide
+	}
+	else {
+		for (unsigned char char_n = 1; char_n; char_n <<= 1)
+		{
 			if (bitMap & char_n)
 			{
 				w_data(fg_color >> 8);
@@ -796,6 +816,28 @@ static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 			else {
 				w_data(bg_color >> 8);
 				w_data(bg_color);
+			}
+			if (flags & 0x03) {         // double wide or triple wide
+				if (bitMap & char_n)
+				{
+					w_data(fg_color >> 8);
+					w_data(fg_color);
+				}
+				else {
+					w_data(bg_color >> 8);
+					w_data(bg_color);
+				}
+				if (flags & 0x02) {          // triple wide
+					if (bitMap & char_n)
+					{
+						w_data(fg_color >> 8);
+						w_data(fg_color);
+					}
+					else {
+						w_data(bg_color >> 8);
+						w_data(bg_color);
+					}
+				}
 			}
 		}
 	}
@@ -803,9 +845,9 @@ static bool TFTLCD::draw_glyph(unsigned short x0, unsigned short y0, TftColor fg
 	return 1;
 }
 
-static bool TFTLCD::draw_glyph(TFTLCD::TftPos &p, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags)
+static bool TFTLCD::draw_glyph(TFTLCD::TftPos &p, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char bmWidth, unsigned char flags)
 {
-	return draw_glyph(p.x, p.y, fg_color, bg_color, bitMap, flags);
+	return draw_glyph(p.x, p.y, fg_color, bg_color, bitMap, bmWidth, flags);
 }
 
 /*****************************************

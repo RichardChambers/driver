@@ -51,8 +51,8 @@ public:
 		static bool     draw_area(TFTLCD::TftRect &rect, TftColor color);
 		static bool     touch_area(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short px, unsigned short py);
 		static bool     touch_area(TFTLCD::TftRect &rect, TFTLCD::TftPos &p);
-		static bool     draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags);
-		static bool     draw_glyph(TFTLCD::TftPos &p, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char flags);
+		static bool     draw_glyph(unsigned short x0, unsigned short y0, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char bmWidth, unsigned char flags);
+		static bool     draw_glyph(TFTLCD::TftPos &p, TftColor fg_color, TftColor bg_color, unsigned char bitMap, unsigned char bmWidth, unsigned char flags);
 
 		static bool 	draw_edge(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1, unsigned short size, TftColor color);
 
