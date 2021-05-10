@@ -73,6 +73,24 @@ The 8x8 bitmap font displays text that is smaller than the 16x16 font however it
 smaller font reduces the memory required for the bitmap font table and also allows for more text to be
 displayed.
 
+### Added additional bitmap font tables
+
+As part of working to reduce the amount of memory required for bitmap font tables, we have found a couple of
+different variations of bitmap fonts. One of these is 8x5 meaning each row of the bitmap table is 5 columns.
+Howver we have also found that the orientation of the text character represented by a row of bitmaps in the
+font table can be different than what our previous two bitmap fonts, the original 8x16 and the added 8x8 bitmap
+fonts, encode.
+
+We have added character bitmap transformations to allow the use of these other bitmap font representations.
+
+We now have bitmap font tables for the ASCII characters from space (0x20) to close curly brace (0x7d) which
+can be configured to eliminate lower case letters to save memory.
+ - 8x5 with each row being 5 columns wide
+ - 8x13 with each row being 13 columns wide
+
+These new tables are in addition to the existing tables of an 8x16, each row 16 columns wide, and 8x8, each
+row 8 columns wide. See the file `KeDei_font.h` and the defines `USE_FONT_5_B` and `USE_FONT_13_B`.
+
 ### Reformated source code and added comments
 
 The first large change has been to reformat the source code in places to make it more readable and to
@@ -114,6 +132,21 @@ logic operators. The flags are:
  -	Flags_UpperOnly - the bitmap font table has upper case letters only
  -	Flags_DoubleHigh - display the text as twice as high as bitmap font indicates. 8 pixel high becomes 16 pixels high.
  -	Flags_DoubleWide - display the text as twice as wide as bitmap font indicates. 8 pixel wide becomes 16 pixels wide.
+ -	Flags_TrippleHigh - display the text as three times as high as bitmap font indicates. 8 pixel high becomes 24 pixels high.
+ -	Flags_TrippleWide - display the text as three times as wide as bitmap font indicates. 8 pixel wide becomes 24 pixels wide.
+ -	Flags_NoLineFeed - display a string and do not automatically add a new line to move to the next line in the text region
+ -	Flags_WrapLine - display a string and if it is too long for the width of a region wrap to next line rather than clip it
+ -	Flags_InvertBitOrder - used with bitmap font tables that require a right to left order of processing bits rather than left to right.
+ -	Flags_RotateBits - used with a bitmap font table whose character map is rotated 90 degrees clockwise.
 
 The user of the library can use these flags to vary the look of the text displayed allowing a greater variety in the
 user interface.
+
+The last two flags, Flags_InvertBitOrder and Flags_RotateBits, are used with unusual bitmap font tables which require that the
+bitmap be modified by a transformation before using it to set the pixels of a character.
+
+## Stack Overflow posts
+
+https://stackoverflow.com/questions/67465098/differences-in-bitmap-or-rasterized-font-bitmaps-and-text-display-on-3-5-tft-lc
+
+https://stackoverflow.com/questions/67259938/reducing-memory-required-for-kedei-tft-library-used-with-3-5-tft-display-with-a
