@@ -61,7 +61,7 @@ The first change with the greatest impact was to add to the `Font` class an 8x8 
 to the already existing 16x16 bitmap font. Preprocessor directives are used to select one or the other.
 Allowing the selection of an 8x8 bitmap font significantly reduced the size of the bitmap font table.
 
-An additional Preprocessor directive is used to all for a further reduction in the bitmap font table by
+An additional Preprocessor directive is used to allow for a further reduction in the bitmap font table by
 eliminating lower case letters. A change in the function `lcd_char()` performs a lower case to upper case
 conversion should the character being displayed be a lower case letter.
 
@@ -79,7 +79,7 @@ As part of working to reduce the amount of memory required for bitmap font table
 different variations of bitmap fonts. One of these is 8x5 meaning each row of the bitmap table is 5 columns.
 Howver we have also found that the orientation of the text character represented by a row of bitmaps in the
 font table can be different than what our previous two bitmap fonts, the original 8x16 and the added 8x8 bitmap
-fonts, encode.
+fonts, encode. See [differences in bitmap or rasterized font bitmaps and text display on 3.5" TFT LCD](https://stackoverflow.com/questions/67465098/differences-in-bitmap-or-rasterized-font-bitmaps-and-text-display-on-3-5-tft-lc)
 
 We have added character bitmap transformations to allow the use of these other bitmap font representations.
 
